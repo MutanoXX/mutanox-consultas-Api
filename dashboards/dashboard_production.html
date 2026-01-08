@@ -153,10 +153,11 @@
 
         /* Login Screen Enhancements */
         .login-background {
-            position: fixed;
+            position: absolute;
             inset: 0;
             background: linear-gradient(135deg, rgba(10, 15, 26, 1) 0%, rgba(16, 185, 129, 0.1) 50%, rgba(10, 15, 26, 1) 100%);
-            z-index: -1;
+            z-index: 1;
+            pointer-events: none;
         }
 
         .login-background::before {
@@ -376,6 +377,7 @@
         .flex { display: flex; }
         .flex-col { flex-direction: column; }
         .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
         .items-center { align-items: center; }
         .gap-4 { gap: 16px; }
         .grid { display: grid; gap: 1rem; }
@@ -395,7 +397,7 @@
     <!-- Login Overlay -->
     <div id="login-overlay" class="fixed-inset z-1000 flex items-center justify-center" style="background: rgba(10, 15, 26, 0.98);">
         <div class="login-background"></div>
-        <div class="login-card">
+        <div class="login-card" style="position: relative; z-index: 10;">
             <div class="login-logo-container">
                 <i class="fas fa-shield-halved login-logo-icon"></i>
                 <h1 class="login-title">MUTANOX</h1>

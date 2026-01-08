@@ -87,7 +87,6 @@ window.login = async function() {
             showToast('error', data.message || 'Credenciais inválidas');
         }
     } catch (error) {
-        console.error('Login error:', error);
         showToast('error', 'Erro de conexão com o servidor');
     }
 }
