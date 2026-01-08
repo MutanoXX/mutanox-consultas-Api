@@ -391,6 +391,40 @@
         .text-lg { font-size: 18px; font-weight: 700; }
         .text-muted { color: #64748b; }
         .text-center { text-align: center; }
+
+        /* Protection Form Styles */
+        .protection-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 32px;
+        }
+
+        /* Endpoints Grid Styles */
+        .endpoints-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            padding: 32px;
+        }
+
+        .protection-item {
+            padding: 20px;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .protection-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -488,24 +522,63 @@
         </div>
 
         <div id="content-endpoints" class="hidden">
-            <div id="endpoints-management" class="grid grid-cols-1 grid-cols-lg-3 gap-6"></div>
+            <div class="card" style="padding: 32px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h3 style="font-size: 24px; font-weight: 700; color: var(--text-main);">
+                        <i class="fas fa-plug" style="color: var(--secondary); margin-right: 10px;"></i>
+                        Gerenciamento de Endpoints
+                    </h3>
+                    <div style="color: var(--text-muted); font-size: 14px;">
+                        <strong id="stat-endpoints">19</strong> endpoints ativos
+                    </div>
+                </div>
+                <div class="endpoints-grid" id="endpoints-grid"></div>
+            </div>
         </div>
 
         <div id="content-protection" class="hidden">
-            <div class="grid grid-cols-1 grid-cols-lg-3 gap-6">
-                <div class="cyber-card p-5">
-                    <h3 class="text-lg mb-4">Adicionar Proteção</h3>
-                    <div class="flex flex-col gap-4">
-                        <input type="text" id="prot-nome" class="input-field" placeholder="Nome">
-                        <input type="text" id="prot-cpf" class="input-field" placeholder="CPF">
-                        <input type="text" id="prot-numero" class="input-field" placeholder="Número">
-                        <input type="number" id="prot-duration" class="input-field" placeholder="Duração (s)">
-                        <button onclick="addProtection()" id="btn-add-prot" class="btn-primary w-full">Proteger</button>
+            <div class="card">
+                <div class="protection-form">
+                    <div style="grid-column: span 2;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-muted);">Nome</label>
+                        <input type="text" id="prot-nome" class="form-control" placeholder="Nome para proteger">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-muted);">CPF</label>
+                        <input type="text" id="prot-cpf" class="form-control" placeholder="CPF">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-muted);">Número</label>
+                        <input type="text" id="prot-numero" class="form-control" placeholder="Telefone">
+                    </div>
+                    <div style="grid-column: span 1;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-muted);">Duração (segundos)</label>
+                        <input type="number" id="prot-duration" class="form-control" placeholder="3600">
+                    </div>
+                    <div style="display: flex; align-items: center; height: 60px; grid-column: span 1;">
+                        <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text-main); cursor: pointer; font-size: 16px;">
+                            <input type="checkbox" id="prot-permanent" style="width: 20px; height: 20px; cursor: pointer;">
+                            <span style="color: var(--primary); font-weight: 700;">PROTEÇÃO PERMANENTE</span>
+                        </label>
+                        <i class="fas fa-infinity" style="color: var(--primary); font-size: 24px; margin-left: 10px;"></i>
                     </div>
                 </div>
-                <div class="cyber-card col-span-lg-2 p-5">
-                    <h3 class="text-lg mb-4">Protegidos</h3>
-                    <div id="protection-list" class="flex flex-col gap-4"></div>
+                <div style="padding: 0 32px 32px 32px; display: flex; gap: 12px;">
+                    <button onclick="addProtection()" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Adicionar Proteção</span>
+                    </button>
+                    <button onclick="clearProtectionForm()" class="btn btn-secondary" style="flex: 1;">
+                        <i class="fas fa-times"></i>
+                        <span>Limpar</span>
+                    </button>
+                </div>
+                <div class="protection-list" style="padding-top: 0;">
+                    <h4 style="margin-bottom: 20px; color: var(--text-muted); font-size: 16px;">
+                        <i class="fas fa-list-shield" style="margin-right: 10px;"></i>
+                        Lista de Proteções
+                    </h4>
+                    <div id="protection-list-items"></div>
                 </div>
             </div>
         </div>

@@ -1,35 +1,37 @@
-// MutanoX Dashboard v2.1 - Simplificado e Corrigido
+// MutanoX Dashboard v3.0 - Melhorado e Corrigido
 const API_BASE = '';
 let adminKey = localStorage.getItem('mutanox_admin_key') || '';
 let refreshInterval = null;
 let mainChart = null;
 let pieChart = null;
 let barChart = null;
+let endpointsData = [];
 
 // Endpoints configuration
 const endpoints = {
     'cpf': { name: 'Consultar CPF', icon: 'fa-id-card', color: '#10b981', desc: 'Consulta completa de dados pessoais' },
     'nome': { name: 'Consultar Nome', icon: 'fa-user', color: '#6366f1', desc: 'Busca por nome completo' },
-    'numero': { name: 'Consultar Telefone', icon: 'fa-phone', color: '#f59e0b', desc: 'Consulta de dados telefônicos' },
-    'bypasscf': { name: 'Bypass Cloudflare', icon: 'fa-shield-virus', color: '#ef4444', desc: 'Bypass de proteção Cloudflare' },
-    'infoff': { name: 'Free Fire Info', icon: 'fa-gamepad', color: '#8b5cf6', desc: 'Informações de conta Free Fire' },
-    'downloader': { name: 'AIO Downloader', icon: 'fa-download', color: '#06b6d4', desc: 'Download de mídias de múltiplas plataformas' },
-    'github': { name: 'GitHub Search', icon: 'fab fa-github', color: '#24292f', desc: 'Busca de usuários e repositórios' },
+    'numero': { name: 'Consultar Telefone', icon: 'fa-phone', color: '#f59e0b', desc: 'Consulta de dados telefonicos' },
+    'bypass': { name: 'Bypass City', icon: 'fa-unlock-alt', color: '#8b5cf6', desc: 'Bypass de proteção' },
+    'bypasscf': { name: 'Bypass Cloudflare', icon: 'fa-shield-virus', color: '#ef4444', desc: 'Bypass de protecao CF' },
+    'infoff': { name: 'Free Fire Info', icon: 'fa-gamepad', color: '#8b5cf6', desc: 'Informacoes de conta Free Fire' },
+    'downloader': { name: 'AIO Downloader', icon: 'fa-download', color: '#06b6d4', desc: 'Download de midias' },
+    'github': { name: 'GitHub Search', icon: 'fab fa-github', color: '#24292f', desc: 'Busca de usuarios' },
     'gimage': { name: 'Google Images', icon: 'fab fa-google', color: '#ea4335', desc: 'Busca de imagens' },
-    'pinterest': { name: 'Pinterest Search', icon: 'fab fa-pinterest', color: '#bd081c', desc: 'Busca de pins e boards' },
-    'roblox': { name: 'Roblox Stalk', icon: 'fas fa-cube', color: '#ff3d00', desc: 'Informações de usuários Roblox' },
-    'tiktok': { name: 'TikTok Search', icon: 'fab fa-tiktok', color: '#00f2ea', desc: 'Busca de perfis e vídeos TikTok' },
-    'yt': { name: 'YouTube Search', icon: 'fab fa-youtube', color: '#ff0000', desc: 'Busca de vídeos no YouTube' },
-    'video': { name: 'Text to Video', icon: 'fas fa-video', color: '#8b5cf6', desc: 'Geração de vídeos a partir de texto' },
-    'nsfw': { name: 'NSFW Generator', icon: 'fas fa-image', color: '#f97316', desc: 'Geração de imagens NSFW' },
-    'clima': { name: 'Clima Tempo', icon: 'fas fa-cloud-sun', color: '#38bdf8', desc: 'Previsão do tempo' },
-    'cotacao': { name: 'Cotação Moedas', icon: 'fas fa-dollar-sign', color: '#22c55e', desc: 'Cotação em tempo real' },
-    'qrcode': { name: 'Gerador QR Code', icon: 'fas fa-qrcode', color: '#ffffff', desc: 'Geração de QR Codes' },
-    'shorten': { name: 'Encurtador URL', icon: 'fas fa-link', color: '#f472b6', desc: 'Encurtamento de URLs' }
+    'pinterest': { name: 'Pinterest Search', icon: 'fab fa-pinterest', color: '#bd081c', desc: 'Busca de pins' },
+    'roblox': { name: 'Roblox Stalk', icon: 'fas fa-cube', color: '#ff3d00', desc: 'Info de usuarios Roblox' },
+    'tiktok': { name: 'TikTok Search', icon: 'fab fa-tiktok', color: '#00f2ea', desc: 'Busca de perfis' },
+    'yt': { name: 'YouTube Search', icon: 'fab fa-youtube', color: '#ff0000', desc: 'Busca de videos' },
+    'video': { name: 'Text to Video', icon: 'fas fa-video', color: '#8b5cf6', desc: 'Geracao de videos' },
+    'nsfw': { name: 'NSFW Generator', icon: 'fas fa-image', color: '#f97316', desc: 'Geracao de imagens' },
+    'clima': { name: 'Clima Tempo', icon: 'fas fa-cloud-sun', color: '#38bdf8', desc: 'Previsao do tempo' },
+    'cotacao': { name: 'Cotacao Moedas', icon: 'fas fa-dollar-sign', color: '#22c55e', desc: 'Cotacao em tempo real' },
+    'qrcode': { name: 'Gerador QR Code', icon: 'fas fa-qrcode', color: '#ffffff', desc: 'Gera QR Code' },
+    'shorten': { name: 'Encurtador URL', icon: 'fas fa-link', color: '#f472b6', desc: 'Encurta links' }
 };
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     if (adminKey) {
         showDashboard();
         initCharts();
@@ -39,8 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Login
 window.login = async function() {
-    const username = document.getElementById('admin-username').value.trim();
-    const password = document.getElementById('admin-password').value.trim();
+    var username = document.getElementById('admin-username').value.trim();
+    var password = document.getElementById('admin-password').value.trim();
 
     if (!username || !password) {
         showToast('error', 'Preencha todos os campos');
@@ -48,13 +50,13 @@ window.login = async function() {
     }
 
     try {
-        const response = await fetch('/api/admin/validate', {
+        var response = await fetch('/api/admin/validate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username: username, password: password })
         });
 
-        const data = await response.json();
+        var data = await response.json();
 
         if (response.ok && data.success) {
             adminKey = data.adminKey;
@@ -64,13 +66,13 @@ window.login = async function() {
             initCharts();
             startAutoRefresh();
         } else {
-            const errorEl = document.getElementById('login-error');
+            var errorEl = document.getElementById('login-error');
             errorEl.classList.remove('hidden');
-            setTimeout(() => errorEl.classList.add('hidden'), 3000);
-            showToast('error', data.message || 'Credenciais inválidas');
+            setTimeout(function() { errorEl.classList.add('hidden'); }, 3000);
+            showToast('error', data.message || 'Credenciais invalidas');
         }
     } catch (error) {
-        showToast('error', 'Erro de conexão');
+        showToast('error', 'Erro de conexao');
     }
 };
 
@@ -87,22 +89,32 @@ function showDashboard() {
 
 // Section Navigation
 window.showSection = function(sectionId) {
-    document.querySelectorAll('.content-section').forEach(section => {
+    document.querySelectorAll('.content-section').forEach(function(section) {
         section.classList.remove('active');
     });
 
-    document.getElementById('section-' + sectionId).classList.add('active');
+    var section = document.getElementById('section-' + sectionId);
+    if (section) {
+        section.classList.add('active');
+    }
 
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+    document.querySelectorAll('.nav-btn').forEach(function(btn) {
         btn.classList.remove('active');
     });
 
-    event.target.classList.add('active');
+    var clickedBtn = event.target;
+    while (clickedBtn && !clickedBtn.classList.contains('nav-btn')) {
+        clickedBtn = clickedBtn.parentElement;
+    }
+    if (clickedBtn && clickedBtn.classList.contains('nav-btn')) {
+        clickedBtn.classList.add('active');
+    }
 
     if (sectionId === 'keys') loadKeys();
     if (sectionId === 'endpoints') loadEndpoints();
     if (sectionId === 'logs') loadLogs();
     if (sectionId === 'protection') loadProtectionList();
+    if (sectionId === 'test') updateTestFields();
 };
 
 // Initialize Charts
@@ -113,7 +125,7 @@ function initCharts() {
 }
 
 function initMainChart() {
-    const ctx = document.getElementById('mainChart');
+    var ctx = document.getElementById('mainChart');
     if (!ctx) return;
 
     mainChart = new Chart(ctx, {
@@ -149,7 +161,7 @@ function initMainChart() {
 }
 
 function initPieChart() {
-    const ctx = document.getElementById('pieChart');
+    var ctx = document.getElementById('pieChart');
     if (!ctx) return;
 
     pieChart = new Chart(ctx, {
@@ -174,7 +186,7 @@ function initPieChart() {
 }
 
 function initBarChart() {
-    const ctx = document.getElementById('barChart');
+    var ctx = document.getElementById('barChart');
     if (!ctx) return;
 
     barChart = new Chart(ctx, {
@@ -209,8 +221,8 @@ function startAutoRefresh() {
 
 async function refreshData() {
     try {
-        const response = await fetch('/api/admin/stats-readonly?apikey=' + adminKey);
-        const data = await response.json();
+        var response = await fetch('/api/admin/stats-readonly?apikey=' + adminKey);
+        var data = await response.json();
 
         if (data.success) {
             updateDashboard(data);
@@ -225,15 +237,16 @@ function updateDashboard(data) {
     document.getElementById('stat-total').textContent = data.totalRequests.toLocaleString();
     document.getElementById('stat-keys').textContent = Object.keys(data.keys).length;
 
-    const uptimeSeconds = Math.floor(data.uptime / 1000);
-    const hours = Math.floor(uptimeSeconds / 3600);
-    const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+    var uptimeSeconds = Math.floor(data.uptime / 1000);
+    var hours = Math.floor(uptimeSeconds / 3600);
+    var minutes = Math.floor((uptimeSeconds % 3600) / 60);
     document.getElementById('stat-uptime').textContent = hours + 'h ' + minutes + 'm';
 }
 
 function updateCharts(data) {
+    // Atualizar main chart
     if (mainChart) {
-        const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        var now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         mainChart.data.labels.push(now);
         mainChart.data.datasets[0].data.push(data.totalRequests);
 
@@ -245,109 +258,47 @@ function updateCharts(data) {
         mainChart.update('none');
     }
 
-    if (pieChart) {
-        const endpointNames = Object.keys(data.endpointHits);
-        const endpointValues = Object.values(data.endpointHits);
+    // Atualizar pie chart
+    if (pieChart && data.endpointHits) {
+        var endpointNames = Object.keys(data.endpointHits);
+        var endpointValues = Object.values(data.endpointHits);
 
-        pieChart.data.labels = endpointNames.map(function(key) { return endpoints[key].name; });
+        pieChart.data.labels = endpointNames.map(function(key) { return endpoints[key] ? endpoints[key].name : key; });
         pieChart.data.datasets[0].data = endpointValues;
         pieChart.update('none');
     }
 
-    if (barChart) {
-        const sortedEndpoints = Object.entries(data.endpointHits)
+    // Atualizar bar chart
+    if (barChart && data.endpointHits) {
+        var sortedEndpoints = Object.entries(data.endpointHits)
             .sort(function(a, b) { return b[1] - a[1]; })
             .slice(0, 5);
 
-        barChart.data.labels = sortedEndpoints.map(function(item) { return endpoints[item[0]].name; });
-        barChart.data.datasets[0].data = sortedEndpoints.map(function(item) { return item[1]; });
+        barChart.data.labels = sortedEndpoints.map(function(entry) { return endpoints[entry[0]] ? endpoints[entry[0]].name : entry[0]; });
+        barChart.data.datasets[0].data = sortedEndpoints.map(function(entry) { return entry[1]; });
         barChart.update('none');
     }
 }
 
-// Keys Management
-window.openCreateKeyModal = async function() {
-    const owner = prompt('Nome do dono da chave:');
-    const role = prompt('Função (user/admin):', 'user');
-
-    if (owner) {
-        try {
-            const response = await fetch('/api/admin/keys?owner=' + encodeURIComponent(owner) + '&role=' + role + '&apikey=' + adminKey, { method: 'POST' });
-            const data = await response.json();
-
-            if (data.success) {
-                showToast('success', 'Chave criada com sucesso');
-                loadKeys();
-            } else {
-                showToast('error', data.error || 'Erro ao criar chave');
-            }
-        } catch (e) {
-            showToast('error', 'Erro de conexão');
-        }
-    }
-};
-
-window.deleteKey = async function(key) {
-    if (!confirm('Tem certeza que deseja excluir esta chave?')) return;
-
-    try {
-        const response = await fetch('/api/admin/keys?target=' + key + '&apikey=' + adminKey, { method: 'DELETE' });
-        const data = await response.json();
-
-        if (data.success) {
-            showToast('success', 'Chave excluída com sucesso');
-            loadKeys();
-        } else {
-            showToast('error', data.error || 'Erro ao excluir chave');
-        }
-    } catch (e) {
-        showToast('error', 'Erro de conexão');
-    }
-};
-
-async function loadKeys() {
-    try {
-        const response = await fetch('/api/admin/stats-readonly?apikey=' + adminKey);
-        const data = await response.json();
-
-        if (data.success) {
-            const tbody = document.getElementById('keys-table-body');
-            tbody.innerHTML = Object.entries(data.keys).map(function(entry) {
-                var key = entry[0];
-                var info = entry[1];
-                var badgeClass = info.role === 'admin' ? 'badge-admin' : 'badge-user';
-                var statusClass = info.active ? 'badge-active' : 'badge-inactive';
-                var statusText = info.active ? 'Ativa' : 'Inativa';
-
-                return '<tr>' +
-                    '<td><code style="background: rgba(16, 185, 129, 0.2); padding: 4px 8px; border-radius: 4px; color: #10b981;">' + key.substring(0, 20) + '...</code></td>' +
-                    '<td><strong>' + info.owner + '</strong></td>' +
-                    '<td><span class="badge ' + badgeClass + '">' + info.role + '</span></td>' +
-                    '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
-                    '<td>' + (info.usageCount || 0) + '</td>' +
-                    '<td><button onclick="deleteKey(\'' + key + '\')" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></td>' +
-                    '</tr>';
-            }).join('');
-        }
-    } catch (e) {
-        console.error('Error loading keys:', e);
-    }
-}
-
-// Endpoints Management
+// Endpoints Management - CORRIGIDO
 async function loadEndpoints() {
     try {
-        const response = await fetch('/api/admin/endpoints?apikey=' + adminKey);
-        const data = await response.json();
+        var response = await fetch('/api/admin/endpoints?apikey=' + adminKey);
+        var data = await response.json();
 
         if (data.success && data.endpoints) {
-            const grid = document.getElementById('endpoints-grid');
-            grid.innerHTML = Object.entries(data.endpoints).map(function(entry) {
+            endpointsData = data.endpoints;
+            var grid = document.getElementById('endpoints-grid');
+            grid.innerHTML = '';
+
+            Object.entries(data.endpoints).forEach(function(entry) {
                 var key = entry[0];
                 var endpoint = entry[1];
                 var endpointInfo = endpoints[key] || { name: key, icon: 'fa-plug', color: '#64748b', desc: 'Endpoint' };
 
-                return '<div class="card endpoint-card">' +
+                var card = document.createElement('div');
+                card.className = 'card endpoint-card';
+                card.innerHTML = '' +
                     '<div class="endpoint-header">' +
                         '<div class="endpoint-icon" style="background: linear-gradient(135deg, ' + endpointInfo.color + ' 0%, ' + endpointInfo.color + 'dd 100%);">' +
                             '<i class="fas ' + endpointInfo.icon + '"></i>' +
@@ -361,26 +312,102 @@ async function loadEndpoints() {
                         '</div>' +
                         '<div style="text-align: right;">' +
                             '<span class="badge ' + (endpoint.active ? 'badge-active' : 'badge-inactive') + '">' +
-                                (endpoint.active ? 'Ativo' : 'Manutenção') +
+                                (endpoint.active ? 'Ativo' : 'Manutencao') +
                             '</span>' +
                         '</div>' +
                     '</div>' +
-                    '</div>';
-            }).join('');
+                    '';
+
+                grid.appendChild(card);
+            });
         }
     } catch (e) {
         console.error('Error loading endpoints:', e);
+        showToast('error', 'Erro ao carregar endpoints');
+    }
+}
+
+// Keys Management
+window.openCreateKeyModal = async function() {
+    var owner = prompt('Nome do dono da chave:');
+    var role = prompt('Funcao (user/admin):', 'user');
+
+    if (owner) {
+        try {
+            var response = await fetch('/api/admin/keys?owner=' + encodeURIComponent(owner) + '&role=' + role + '&apikey=' + adminKey, { method: 'POST' });
+            var data = await response.json();
+
+            if (data.success) {
+                showToast('success', 'Chave criada com sucesso');
+                loadKeys();
+            } else {
+                showToast('error', data.error || 'Erro ao criar chave');
+            }
+        } catch (e) {
+            showToast('error', 'Erro de conexao');
+        }
+    }
+};
+
+window.deleteKey = async function(key) {
+    if (!confirm('Tem certeza que deseja excluir esta chave?')) return;
+
+    try {
+        var response = await fetch('/api/admin/keys?target=' + key + '&apikey=' + adminKey, { method: 'DELETE' });
+        var data = await response.json();
+
+        if (data.success) {
+            showToast('success', 'Chave excluida com sucesso');
+            loadKeys();
+        } else {
+            showToast('error', data.error || 'Erro ao excluir chave');
+        }
+    } catch (e) {
+        showToast('error', 'Erro de conexao');
+    }
+};
+
+async function loadKeys() {
+    try {
+        var response = await fetch('/api/admin/stats-readonly?apikey=' + adminKey);
+        var data = await response.json();
+
+        if (data.success) {
+            var tbody = document.getElementById('keys-table-body');
+            tbody.innerHTML = Object.entries(data.keys).map(function(entry) {
+                var key = entry[0];
+                var info = entry[1];
+                var badgeClass = info.role === 'admin' ? 'badge-admin' : 'badge-user';
+                var statusClass = info.active ? 'badge-active' : 'badge-inactive';
+                var statusText = info.active ? 'Ativa' : 'Inativa';
+
+                return '<tr>' +
+                    '<td><code style="background: rgba(16, 185, 129, 0.2); padding: 4px 8px; border-radius: 4px; color: #10b981;">' + key.substring(0, 20) + '...</code></td>' +
+                    '<td><strong>' + info.owner + '</strong></td>' +
+                    '<td><span class="badge ' + badgeClass + '">' + info.role + '</span></td>' +
+                    '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
+                    '<td>' + (info.usageCount || 0) + '</td>' +
+                    '<td>' +
+                        '<button onclick="deleteKey(\'' + key + '\')" class="btn btn-danger btn-sm">' +
+                            '<i class="fas fa-trash"></i>' +
+                        '</button>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+    } catch (e) {
+        console.error('Error loading keys:', e);
     }
 }
 
 // Logs
 async function loadLogs() {
     try {
-        const response = await fetch('/api/admin/stats-readonly?apikey=' + adminKey);
-        const data = await response.json();
+        var response = await fetch('/api/admin/stats-readonly?apikey=' + adminKey);
+        var data = await response.json();
 
         if (data.success) {
-            const terminal = document.getElementById('terminal');
+            var terminal = document.getElementById('terminal');
             terminal.innerHTML = (data.logs || []).map(function(log) {
                 return '<div class="log-entry">' +
                     '<span class="log-time">[' + new Date().toLocaleTimeString('pt-BR') + ']</span>' +
@@ -399,12 +426,13 @@ window.refreshLogs = function() {
     showToast('info', 'Logs atualizados');
 };
 
-// Protection
+// Protection - MELHORADO
 window.addProtection = async function() {
     var nome = document.getElementById('prot-nome').value.trim();
     var cpf = document.getElementById('prot-cpf').value.trim();
     var numero = document.getElementById('prot-numero').value.trim();
     var duration = document.getElementById('prot-duration').value.trim();
+    var permanent = document.getElementById('prot-permanent') ? document.getElementById('prot-permanent').checked : false;
 
     if (!nome && !cpf && !numero) {
         showToast('error', 'Preencha pelo menos um campo');
@@ -416,20 +444,23 @@ window.addProtection = async function() {
         if (nome) url += '&nome=' + encodeURIComponent(nome);
         if (cpf) url += '&cpf=' + cpf;
         if (numero) url += '&numero=' + numero;
-        if (duration) url += '&duration=' + duration;
+        if (duration && !permanent) url += '&duration=' + duration;
+        if (permanent) url += '&permanent=true';
 
-        const response = await fetch(url, { method: 'POST' });
-        const data = await response.json();
+        var response = await fetch(url, { method: 'POST' });
+        var data = await response.json();
 
         if (data.success) {
-            showToast('success', 'Proteção adicionada com sucesso');
+            var message = permanent ? 'Protecao permanente adicionada!' : 'Protecao adicionada com sucesso!';
+            showToast('success', message);
             clearProtectionForm();
             loadProtectionList();
         } else {
-            showToast('error', data.error || 'Erro ao adicionar proteção');
+            showToast('error', data.error || 'Erro ao adicionar protecao');
         }
     } catch (e) {
-        showToast('error', 'Erro de conexão');
+        console.error('Erro ao adicionar protecao:', e);
+        showToast('error', 'Erro de conexao');
     }
 };
 
@@ -438,40 +469,51 @@ window.clearProtectionForm = function() {
     document.getElementById('prot-cpf').value = '';
     document.getElementById('prot-numero').value = '';
     document.getElementById('prot-duration').value = '';
+    if (document.getElementById('prot-permanent')) {
+        document.getElementById('prot-permanent').checked = false;
+    }
 };
 
 window.removeProtection = async function(id) {
-    if (!confirm('Remover esta proteção?')) return;
+    if (!confirm('Remover esta protecao?')) return;
 
     try {
-        const response = await fetch('/api/admin/protection/remove?apikey=' + adminKey + '&id=' + id, { method: 'POST' });
-        const data = await response.json();
+        var response = await fetch('/api/admin/protection/remove?apikey=' + adminKey + '&id=' + id, { method: 'POST' });
+        var data = await response.json();
 
         if (data.success) {
-            showToast('success', 'Proteção removida com sucesso');
+            showToast('success', 'Protecao removida com sucesso');
             loadProtectionList();
         } else {
-            showToast('error', data.error || 'Erro ao remover proteção');
+            showToast('error', data.error || 'Erro ao remover protecao');
         }
     } catch (e) {
-        showToast('error', 'Erro de conexão');
+        console.error('Erro ao remover protecao:', e);
+        showToast('error', 'Erro de conexao');
     }
 };
 
 async function loadProtectionList() {
     try {
-        const response = await fetch('/api/admin/protection/list?apikey=' + adminKey);
-        const data = await response.json();
+        var response = await fetch('/api/admin/protection/list?apikey=' + adminKey);
+        var data = await response.json();
 
         if (data.success) {
-            const list = document.getElementById('protection-list-items');
+            var list = document.getElementById('protection-list-items');
             list.innerHTML = (data.list || []).map(function(item) {
+                var permanentBadge = item.permanent ?
+                    '<span class="badge" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white;">PERMANENTE</span>' : '';
+
                 return '<div class="protection-item">' +
                     '<div>' +
-                        '<strong style="font-size: 15px;">' + (item.nome || 'Sem Nome') + '</strong>' +
+                        '<strong style="font-size: 15px;">' + (item.nome || 'Sem Nome') + '</strong> ' +
+                        permanentBadge +
                         '<div style="color: #64748b; font-size: 13px; margin-top: 4px;">' +
                             (item.cpf ? 'CPF: ' + item.cpf : '') +
-                            (item.numero ? ' Telefone: ' + item.numero : '') +
+                            (item.numero ? ' | Telefone: ' + item.numero : '') +
+                        '</div>' +
+                        '<div style="color: #10b981; font-size: 12px; margin-top: 2px;">' +
+                            (item.permanent ? 'Protecao Eterna' : 'Expira: ' + (item.expiresAt ? new Date(item.expiresAt).toLocaleString('pt-BR') : 'N/A')) +
                         '</div>' +
                     '</div>' +
                     '<button onclick="removeProtection(\'' + item.id + '\')" class="btn btn-danger btn-sm">' +
@@ -496,14 +538,15 @@ window.updateTestFields = function() {
         'cpf': 'CPF',
         'nome': 'Nome',
         'numero': 'Telefone',
+        'bypass': 'URL',
         'bypasscf': 'URL',
         'infoff': 'ID da Conta',
         'downloader': 'URL',
-        'github': 'Nome de Usuário',
+        'github': 'Nome de Usuario',
         'gimage': 'Query de Busca',
         'pinterest': 'Query de Busca',
-        'roblox': 'Nome de Usuário',
-        'tiktok': 'Nome de Usuário',
+        'roblox': 'Nome de Usuario',
+        'tiktok': 'Nome de Usuario',
         'yt': 'Query de Busca',
         'video': 'Texto Prompt',
         'nsfw': 'Prompt',
@@ -520,7 +563,7 @@ window.updateTestFields = function() {
 window.testQuery = async function() {
     var type = document.getElementById('test-type').value;
     var query = document.getElementById('test-query').value.trim();
-    var apikey = document.getElementById('test-apikey').value.trim() || 'MutanoXX';
+    var apikey = document.getElementById('test-apikey').value.trim() || 'MutanoX3397';
 
     if (!query) {
         showToast('error', 'Preencha o campo de consulta');
@@ -534,8 +577,9 @@ window.testQuery = async function() {
     resultContent.textContent = 'Executando consulta...';
 
     try {
-        const response = await fetch('/api/consultas?tipo=' + type + '&q=' + encodeURIComponent(query) + '&apikey=' + apikey);
-        const data = await response.json();
+        var url = '/api/consultas?tipo=' + type + '&q=' + encodeURIComponent(query) + '&apikey=' + apikey;
+        var response = await fetch(url);
+        var data = await response.json();
 
         resultContent.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
 
@@ -546,14 +590,14 @@ window.testQuery = async function() {
         }
     } catch (e) {
         resultContent.innerHTML = '<pre style="color: #ef4444;">Erro: ' + e.message + '</pre>';
-        showToast('error', 'Erro de conexão');
+        showToast('error', 'Erro de conexao');
     }
 };
 
 // Toast
 function showToast(type, message) {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
+    var container = document.getElementById('toast-container');
+    var toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i><span>' + message + '</span>';
     container.appendChild(toast);

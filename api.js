@@ -1081,7 +1081,52 @@ const server = http.createServer(async (req, res) => {
           log('ADMIN', `Chave removida: ${target}`);
           res.writeHead(200); res.end(JSON.stringify({ success: true, message: 'Key deleted' }));
       } else if (path === '/api/admin/endpoints' && req.method === 'GET') {
-          res.writeHead(200); res.end(JSON.stringify({ success: true, config: endpointsConfig }));
+          const endpointKeys = Object.keys(endpointsConfig);
+          const endpointsData = endpointKeys.map(key => ({
+              id: key,
+              name: endpointsConfig[key].name,
+              description: endpointsConfig[key].description,
+              hits: systemStats.endpointHits[key] || 0,
+              maintenance: endpointsConfig[key].maintenance || false
+          }));
+
+          res.writeHead(200);
+          res.end(JSON.stringify({ success: true, endpoints: endpointsData }));
+      } else if (path === '/api/admin/endpoints/stats' && req.method === 'GET') {
+          // Endpoint específico para estatísticas de endpoints
+          const sortedEndpoints = Object.entries(systemStats.endpointHits)
+              .sort((a, b) => b[1] - a[1])
+              .map(([key, hits]) => ({
+                  id: key,
+                  name: endpointsConfig[key]?.name || key,
+                  hits: hits,
+                  description: endpointsConfig[key]?.description || ''
+              }));
+
+          res.writeHead(200);
+          res.end(JSON.stringify({
+              success: true,
+              endpoints: sortedEndpoints,
+              totalEndpoints: Object.keys(endpointsConfig).length
+          }));
+      } else if (path === '/api/admin/keys/stats' && req.method === 'GET') {
+          // Endpoint para estatísticas de API Keys
+          const keyStats = Object.entries(keys).map(([key, info]) => ({
+              key: key.substring(0, 20) + '...',
+              owner: info.owner,
+              role: info.role,
+              active: info.active,
+              usageCount: info.usageCount || 0,
+              lastUsed: info.lastUsed,
+              createdAt: info.createdAt
+          }));
+
+          res.writeHead(200);
+          res.end(JSON.stringify({
+              success: true,
+              keys: keyStats,
+              totalKeys: Object.keys(keys).length
+          }));
       } else if (path === '/api/admin/endpoints/toggle' && req.method === 'POST') {
           const target = query.target;
           if (!target || !endpointsConfig[target]) { res.writeHead(404); res.end(JSON.stringify({ success: false, error: 'Endpoint not found' })); return; }
@@ -1139,44 +1184,66 @@ const server = http.createServer(async (req, res) => {
           const result = await consultarNome(q);
           res.writeHead(200); res.end(JSON.stringify(result));
       } else if (path === '/api/admin/protection/add' && req.method === 'POST') {
-          const { nome, cpf, numero, duration, autoFetch } = query;
+          const { nome, cpf, numero, duration, permanent } = query;
+
           if (!nome && !cpf && !numero) {
-              res.writeHead(400); res.end(JSON.stringify({ success: false, error: 'Forneça ao menos um dado (nome, cpf ou numero)' }));
+              res.writeHead(400); res.end(JSON.stringify({ success: false, error: 'Forneça ao menos um dos dados (nome, cpf ou numero)' }));
               return;
           }
 
-          let fetchedData = null;
-          let finalCpf = cpf || null;
-          let finalNome = nome || null;
+          try {
+              const id = generateUid(12);
+              let expiresAt = null;
 
-          // Se autoFetch for true ou se apenas CPF for fornecido, buscar dados completos
-          if (autoFetch === 'true' || (cpf && !nome)) {
-              const targetCpf = cpf;
-              if (targetCpf) {
-                  log('ADMIN', `Buscando dados completos para proteção: ${targetCpf}`);
-                  const result = await consultarCPF(targetCpf);
+              // Se NÃO for permanente E tiver duração, calcula expiração
+              if (permanent !== 'true' && permanent !== true && duration && duration !== '0') {
+                  const now = new Date();
+                  now.setSeconds(now.getSeconds() + parseInt(duration));
+                  expiresAt = now.toISOString();
+              }
+
+              // Buscar dados completos se solicitado
+              let fetchedData = null;
+              let finalNome = nome || '';
+              let finalCpf = cpf || '';
+
+              if (cpf && !nome) {
+                  log('ADMIN', `Buscando dados completos para proteção: ${cpf}`);
+                  const result = await consultarCPF(cpf);
                   if (result.sucesso && result.dados) {
                       fetchedData = result.dados;
-                      finalNome = result.dados.dadosBasicos?.nome || finalNome;
-                      finalCpf = result.dados.dadosBasicos?.cpf || finalCpf;
+                      finalNome = result.dados.nome || '';
+                      finalCpf = result.dados.cpf || '';
                   }
               }
-          }
 
-          const id = generateUid(8);
-          const data = {
-              id,
-              nome: finalNome,
-              cpf: finalCpf,
-              numero: numero || null,
-              dadosCompletos: fetchedData,
-              active: true,
-              createdAt: new Date().toISOString(),
-              expiresAt: duration ? new Date(Date.now() + parseInt(duration) * 1000).toISOString() : null
-          };
-          fs.writeFileSync(pathModule.join(PROTECTED_USERS_DIR, `${id}.json`), JSON.stringify(data, null, 2));
-          log('ADMIN', `Proteção adicionada: ${id}`, `Nome: ${finalNome} | CPF: ${finalCpf}`);
-          res.writeHead(201); res.end(JSON.stringify({ success: true, data }));
+              const data = {
+                  id,
+                  nome: finalNome,
+                  cpf: finalCpf,
+                  numero: numero || '',
+                  dadosCompletos: fetchedData,
+                  permanent: permanent === 'true' || permanent === true,
+                  active: true,
+                  createdAt: new Date().toISOString(),
+                  expiresAt: expiresAt
+              };
+
+              const filename = `${id}.json`;
+              fs.writeFileSync(pathModule.join(PROTECTED_USERS_DIR, filename), JSON.stringify(data, null, 2));
+
+              log('ADMIN', `Proteção adicionada: ${id}`, `Nome: ${finalNome} | Permanente: ${permanent === 'true' || permanent === true ? 'SIM' : 'NÃO'}`);
+              res.writeHead(200);
+              res.end(JSON.stringify({
+                  success: true,
+                  protection: data,
+                  message: permanent === 'true' || permanent === true ? 'Proteção permanente adicionada' : 'Proteção adicionada'
+              }));
+          } catch (error) {
+              console.error('[Protection Add Error]', error);
+              res.writeHead(500);
+              res.end(JSON.stringify({ success: false, error: 'Erro ao adicionar proteção' }));
+          }
       } else if (path === '/api/admin/protection/remove' && req.method === 'POST') {
           const { id } = query;
           const filePath = pathModule.join(PROTECTED_USERS_DIR, `${id}.json`);
