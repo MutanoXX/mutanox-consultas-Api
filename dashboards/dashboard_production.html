@@ -534,45 +534,6 @@
         </div>
     </div>
 
-    <script src="/dashboards/dashboard-production.js"></script>
-    <!-- Anti-debug comentado temporariamente para permitir login funcionar -->
-    <!--
-    <script>
-        // ANTI-F12 & CONSOLE PROTECTION
-        (function() {
-            // Bloquear clique direito
-            document.addEventListener('contextmenu', e => e.preventDefault());
-
-            // Bloquear atalhos de inspeção
-            document.addEventListener('keydown', e => {
-                if (
-                    e.keyCode === 123 || // F12
-                    (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I/J/C
-                    (e.ctrlKey && e.keyCode === 85) // Ctrl+U
-                ) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-
-            // Detecção de DevTools via debugger
-            setInterval(() => {
-                const start = Date.now();
-                debugger;
-                if (Date.now() - start > 100) {
-                    document.body.innerHTML = '<div style="background:#000;color:#f00;height:100vh;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:20px;text-align:center;padding:20px;">ACESSO NEGADO<br>O uso de ferramentas de desenvolvedor é proibido neste sistema.</div>';
-                    setTimeout(() => location.reload(), 2000);
-                }
-            }, 1000);
-
-            // Limpar console continuamente
-            setInterval(() => {
-                console.clear();
-                console.log('%cMUTANOX SECURITY ACTIVE', 'color: #10b981; font-size: 30px; font-weight: bold; text-shadow: 0 0 10px rgba(16,185,129,0.5);');
-                console.log('%cO console foi desativado para sua segurança.', 'color: #94a3b8; font-size: 16px;');
-            }, 500);
-        })();
-    </script>
-    -->
+    <script src="/dashboards/dashboard-new.js"></script>
 </body>
 </html>
