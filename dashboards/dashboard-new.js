@@ -1,4 +1,4 @@
-// MutanoX Dashboard v2.0 - JavaScript
+// MutanoX Dashboard v2.1 - Simplificado e Corrigido
 const API_BASE = '';
 let adminKey = localStorage.getItem('mutanox_admin_key') || '';
 let refreshInterval = null;
@@ -87,45 +87,23 @@ function showDashboard() {
 
 // Section Navigation
 window.showSection = function(sectionId) {
-    // Hide all sections
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
 
-    // Show selected section
-    document.getElementById(`section-${sectionId}`).classList.add('active');
+    document.getElementById('section-' + sectionId).classList.add('active');
 
-    // Update nav buttons
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
 
-    // Find and activate the clicked button
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        if (btn.textContent.toLowerCase().includes(getSectionName(sectionId))) {
-            btn.classList.add('active');
-        }
-    });
+    event.target.classList.add('active');
 
-    // Load section-specific data
     if (sectionId === 'keys') loadKeys();
     if (sectionId === 'endpoints') loadEndpoints();
     if (sectionId === 'logs') loadLogs();
     if (sectionId === 'protection') loadProtectionList();
 };
-
-function getSectionName(sectionId) {
-    const names = {
-        'dashboard': 'dashboard',
-        'stats': 'estatísticas',
-        'keys': 'api keys',
-        'endpoints': 'endpoints',
-        'logs': 'logs',
-        'protection': 'proteção',
-        'test': 'testar api'
-    };
-    return names[sectionId] || '';
-}
 
 // Initialize Charts
 function initCharts() {
@@ -160,24 +138,12 @@ function initMainChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(99, 102, 241, 0.1)' },
-                    ticks: { color: '#64748b' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#64748b' }
-                }
+                y: { beginAtZero: true, grid: { color: 'rgba(99, 102, 241, 0.1)' }, ticks: { color: '#64748b' } },
+                x: { grid: { display: false }, ticks: { color: '#64748b' } }
             },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            }
+            interaction: { intersect: false, mode: 'index' }
         }
     });
 }
@@ -192,10 +158,7 @@ function initPieChart() {
             labels: [],
             datasets: [{
                 data: [],
-                backgroundColor: [
-                    '#10b981', '#6366f1', '#f59e0b', '#8b5cf6',
-                    '#ef4444', '#06b6d4', '#38bdf8', '#f97316'
-                ],
+                backgroundColor: ['#10b981', '#6366f1', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#38bdf8', '#f97316'],
                 borderWidth: 0
             }]
         },
@@ -203,10 +166,7 @@ function initPieChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#64748b', padding: 20, font: { size: 13 } }
-                }
+                legend: { position: 'bottom', labels: { color: '#64748b', padding: 20, font: { size: 13 } } }
             },
             cutout: '60%'
         }
@@ -224,13 +184,7 @@ function initBarChart() {
             datasets: [{
                 label: 'Acessos',
                 data: [],
-                backgroundColor: [
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(99, 102, 241, 0.8)',
-                    'rgba(245, 158, 11, 0.8)',
-                    'rgba(139, 92, 246, 0.8)',
-                    'rgba(239, 68, 68, 0.8)'
-                ],
+                backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(99, 102, 241, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(239, 68, 68, 0.8)'],
                 borderRadius: 8,
                 borderSkipped: false
             }]
@@ -238,19 +192,10 @@ function initBarChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(99, 102, 241, 0.1)' },
-                    ticks: { color: '#64748b' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#64748b' }
-                }
+                y: { beginAtZero: true, grid: { color: 'rgba(99, 102, 241, 0.1)' }, ticks: { color: '#64748b' } },
+                x: { grid: { display: false }, ticks: { color: '#64748b' } }
             }
         }
     });
@@ -264,7 +209,7 @@ function startAutoRefresh() {
 
 async function refreshData() {
     try {
-        const response = await fetch(`/api/admin/stats-readonly?apikey=${adminKey}`);
+        const response = await fetch('/api/admin/stats-readonly?apikey=' + adminKey);
         const data = await response.json();
 
         if (data.success) {
@@ -283,11 +228,10 @@ function updateDashboard(data) {
     const uptimeSeconds = Math.floor(data.uptime / 1000);
     const hours = Math.floor(uptimeSeconds / 3600);
     const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-    document.getElementById('stat-uptime').textContent = `${hours}h ${minutes}m`;
+    document.getElementById('stat-uptime').textContent = hours + 'h ' + minutes + 'm';
 }
 
 function updateCharts(data) {
-    // Update main chart
     if (mainChart) {
         const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         mainChart.data.labels.push(now);
@@ -301,24 +245,22 @@ function updateCharts(data) {
         mainChart.update('none');
     }
 
-    // Update pie chart
     if (pieChart) {
         const endpointNames = Object.keys(data.endpointHits);
         const endpointValues = Object.values(data.endpointHits);
 
-        pieChart.data.labels = endpointNames.map(key => endpoints[key]?.name || key);
+        pieChart.data.labels = endpointNames.map(function(key) { return endpoints[key].name; });
         pieChart.data.datasets[0].data = endpointValues;
         pieChart.update('none');
     }
 
-    // Update bar chart
     if (barChart) {
         const sortedEndpoints = Object.entries(data.endpointHits)
-            .sort((a, b) => b[1] - a[1])
+            .sort(function(a, b) { return b[1] - a[1]; })
             .slice(0, 5);
 
-        barChart.data.labels = sortedEndpoints.map(([key]) => endpoints[key]?.name || key);
-        barChart.data.datasets[0].data = sortedEndpoints.map(([, value]) => value);
+        barChart.data.labels = sortedEndpoints.map(function(item) { return endpoints[item[0]].name; });
+        barChart.data.datasets[0].data = sortedEndpoints.map(function(item) { return item[1]; });
         barChart.update('none');
     }
 }
@@ -330,7 +272,7 @@ window.openCreateKeyModal = async function() {
 
     if (owner) {
         try {
-            const response = await fetch(`/api/admin/keys?owner=${encodeURIComponent(owner)}&role=${role}&apikey=${adminKey}`, { method: 'POST' });
+            const response = await fetch('/api/admin/keys?owner=' + encodeURIComponent(owner) + '&role=' + role + '&apikey=' + adminKey, { method: 'POST' });
             const data = await response.json();
 
             if (data.success) {
@@ -349,7 +291,7 @@ window.deleteKey = async function(key) {
     if (!confirm('Tem certeza que deseja excluir esta chave?')) return;
 
     try {
-        const response = await fetch(`/api/admin/keys?target=${key}&apikey=${adminKey}`, { method: 'DELETE' });
+        const response = await fetch('/api/admin/keys?target=' + key + '&apikey=' + adminKey, { method: 'DELETE' });
         const data = await response.json();
 
         if (data.success) {
@@ -365,25 +307,27 @@ window.deleteKey = async function(key) {
 
 async function loadKeys() {
     try {
-        const response = await fetch(`/api/admin/stats-readonly?apikey=${adminKey}`);
+        const response = await fetch('/api/admin/stats-readonly?apikey=' + adminKey);
         const data = await response.json();
 
         if (data.success) {
             const tbody = document.getElementById('keys-table-body');
-            tbody.innerHTML = Object.entries(data.keys).map(([key, info]) => `
-                <tr>
-                    <td><code style="background: rgba(16, 185, 129, 0.2); padding: 4px 8px; border-radius: 4px; color: #10b981;">${key.substring(0, 20)}...</code></td>
-                    <td><strong>${info.owner}</strong></td>
-                    <td><span class="badge ${info.role === 'admin' ? 'badge-admin' : 'badge-user'}">${info.role}</span></td>
-                    <td><span class="badge ${info.active ? 'badge-active' : 'badge-inactive'}">${info.active ? 'Ativa' : 'Inativa'}</span></td>
-                    <td>${info.usageCount || 0}</td>
-                    <td>
-                        <button onclick="deleteKey('${key}')" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = Object.entries(data.keys).map(function(entry) {
+                var key = entry[0];
+                var info = entry[1];
+                var badgeClass = info.role === 'admin' ? 'badge-admin' : 'badge-user';
+                var statusClass = info.active ? 'badge-active' : 'badge-inactive';
+                var statusText = info.active ? 'Ativa' : 'Inativa';
+
+                return '<tr>' +
+                    '<td><code style="background: rgba(16, 185, 129, 0.2); padding: 4px 8px; border-radius: 4px; color: #10b981;">' + key.substring(0, 20) + '...</code></td>' +
+                    '<td><strong>' + info.owner + '</strong></td>' +
+                    '<td><span class="badge ' + badgeClass + '">' + info.role + '</span></td>' +
+                    '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
+                    '<td>' + (info.usageCount || 0) + '</td>' +
+                    '<td><button onclick="deleteKey(\'' + key + '\')" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></td>' +
+                    '</tr>';
+            }).join('');
         }
     } catch (e) {
         console.error('Error loading keys:', e);
@@ -393,34 +337,35 @@ async function loadKeys() {
 // Endpoints Management
 async function loadEndpoints() {
     try {
-        const response = await fetch(`/api/admin/endpoints?apikey=${adminKey}`);
+        const response = await fetch('/api/admin/endpoints?apikey=' + adminKey);
         const data = await response.json();
 
         if (data.success && data.endpoints) {
             const grid = document.getElementById('endpoints-grid');
-            grid.innerHTML = Object.entries(data.endpoints).map(([key, endpoint]) => {
-                const endpointInfo = endpoints[key] || { name: key, icon: 'fa-plug', color: '#64748b', desc: 'Endpoint' };
-                return `
-                    <div class="card endpoint-card">
-                        <div class="endpoint-header">
-                            <div class="endpoint-icon" style="background: linear-gradient(135deg, ${endpointInfo.color} 0%, ${endpointInfo.color}dd 100%);">
-                                <i class="fas ${endpointInfo.icon}"></i>
-                            </div>
-                            <div class="endpoint-name">${endpointInfo.name}</div>
-                        </div>
-                        <div class="endpoint-stats">
-                            <div>
-                                <div class="endpoint-hits">${endpoint.hits || 0}</div>
-                                <div class="endpoint-label">Acessos</div>
-                            </div>
-                            <div style="text-align: right;">
-                                <span class="badge ${endpoint.active ? 'badge-active' : 'badge-inactive'}">
-                                    ${endpoint.active ? 'Ativo' : 'Manutenção'}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+            grid.innerHTML = Object.entries(data.endpoints).map(function(entry) {
+                var key = entry[0];
+                var endpoint = entry[1];
+                var endpointInfo = endpoints[key] || { name: key, icon: 'fa-plug', color: '#64748b', desc: 'Endpoint' };
+
+                return '<div class="card endpoint-card">' +
+                    '<div class="endpoint-header">' +
+                        '<div class="endpoint-icon" style="background: linear-gradient(135deg, ' + endpointInfo.color + ' 0%, ' + endpointInfo.color + 'dd 100%);">' +
+                            '<i class="fas ' + endpointInfo.icon + '"></i>' +
+                        '</div>' +
+                        '<div class="endpoint-name">' + endpointInfo.name + '</div>' +
+                    '</div>' +
+                    '<div class="endpoint-stats">' +
+                        '<div>' +
+                            '<div class="endpoint-hits">' + (endpoint.hits || 0) + '</div>' +
+                            '<div class="endpoint-label">Acessos</div>' +
+                        '</div>' +
+                        '<div style="text-align: right;">' +
+                            '<span class="badge ' + (endpoint.active ? 'badge-active' : 'badge-inactive') + '">' +
+                                (endpoint.active ? 'Ativo' : 'Manutenção') +
+                            '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '</div>';
             }).join('');
         }
     } catch (e) {
@@ -428,41 +373,21 @@ async function loadEndpoints() {
     }
 }
 
-window.toggleEndpoint = async function(endpoint) {
-    try {
-        const response = await fetch('/api/admin/endpoints/toggle', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ endpoint, apikey: adminKey })
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            showToast('success', 'Endpoint atualizado com sucesso');
-            loadEndpoints();
-        } else {
-            showToast('error', data.error || 'Erro ao atualizar endpoint');
-        }
-    } catch (e) {
-        showToast('error', 'Erro de conexão');
-    }
-};
-
 // Logs
 async function loadLogs() {
     try {
-        const response = await fetch(`/api/admin/stats-readonly?apikey=${adminKey}`);
+        const response = await fetch('/api/admin/stats-readonly?apikey=' + adminKey);
         const data = await response.json();
 
         if (data.success) {
             const terminal = document.getElementById('terminal');
-            terminal.innerHTML = (data.logs || []).map(log => `
-                <div class="log-entry">
-                    <span class="log-time">[${new Date().toLocaleTimeString('pt-BR')}]</span>
-                    <span class="log-type-${log.type.toLowerCase()}">${log.type.toUpperCase()}</span>
-                    <span class="log-message">${log.message}</span>
-                </div>
-            `).join('');
+            terminal.innerHTML = (data.logs || []).map(function(log) {
+                return '<div class="log-entry">' +
+                    '<span class="log-time">[' + new Date().toLocaleTimeString('pt-BR') + ']</span>' +
+                    '<span class="log-type-' + log.type.toLowerCase() + '">' + log.type.toUpperCase() + '</span>' +
+                    '<span class="log-message">' + log.message + '</span>' +
+                    '</div>';
+            }).join('');
         }
     } catch (e) {
         console.error('Error loading logs:', e);
@@ -476,10 +401,10 @@ window.refreshLogs = function() {
 
 // Protection
 window.addProtection = async function() {
-    const nome = document.getElementById('prot-nome').value.trim();
-    const cpf = document.getElementById('prot-cpf').value.trim();
-    const numero = document.getElementById('prot-numero').value.trim();
-    const duration = document.getElementById('prot-duration').value.trim();
+    var nome = document.getElementById('prot-nome').value.trim();
+    var cpf = document.getElementById('prot-cpf').value.trim();
+    var numero = document.getElementById('prot-numero').value.trim();
+    var duration = document.getElementById('prot-duration').value.trim();
 
     if (!nome && !cpf && !numero) {
         showToast('error', 'Preencha pelo menos um campo');
@@ -487,14 +412,13 @@ window.addProtection = async function() {
     }
 
     try {
-        const response = await fetch('/api/admin/protection/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                nome, cpf, numero, duration,
-                apikey: adminKey
-            })
-        });
+        var url = '/api/admin/protection/add?apikey=' + adminKey;
+        if (nome) url += '&nome=' + encodeURIComponent(nome);
+        if (cpf) url += '&cpf=' + cpf;
+        if (numero) url += '&numero=' + numero;
+        if (duration) url += '&duration=' + duration;
+
+        const response = await fetch(url, { method: 'POST' });
         const data = await response.json();
 
         if (data.success) {
@@ -520,11 +444,7 @@ window.removeProtection = async function(id) {
     if (!confirm('Remover esta proteção?')) return;
 
     try {
-        const response = await fetch('/api/admin/protection/remove', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, apikey: adminKey })
-        });
+        const response = await fetch('/api/admin/protection/remove?apikey=' + adminKey + '&id=' + id, { method: 'POST' });
         const data = await response.json();
 
         if (data.success) {
@@ -540,25 +460,25 @@ window.removeProtection = async function(id) {
 
 async function loadProtectionList() {
     try {
-        const response = await fetch('/api/admin/protection/list?apikey=${adminKey}`);
+        const response = await fetch('/api/admin/protection/list?apikey=' + adminKey);
         const data = await response.json();
 
         if (data.success) {
             const list = document.getElementById('protection-list-items');
-            list.innerHTML = (data.list || []).map(item => `
-                <div class="protection-item">
-                    <div>
-                        <strong style="font-size: 15px;">${item.nome || 'Sem Nome'}</strong>
-                        <div style="color: #64748b; font-size: 13px; margin-top: 4px;">
-                            ${item.cpf ? `CPF: ${item.cpf}` : ''}
-                            ${item.numero ? `Telefone: ${item.numero}` : ''}
-                        </div>
-                    </div>
-                    <button onclick="removeProtection('${item.id}')" class="btn btn-danger btn-sm">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
+            list.innerHTML = (data.list || []).map(function(item) {
+                return '<div class="protection-item">' +
+                    '<div>' +
+                        '<strong style="font-size: 15px;">' + (item.nome || 'Sem Nome') + '</strong>' +
+                        '<div style="color: #64748b; font-size: 13px; margin-top: 4px;">' +
+                            (item.cpf ? 'CPF: ' + item.cpf : '') +
+                            (item.numero ? ' Telefone: ' + item.numero : '') +
+                        '</div>' +
+                    '</div>' +
+                    '<button onclick="removeProtection(\'' + item.id + '\')" class="btn btn-danger btn-sm">' +
+                        '<i class="fas fa-trash"></i>' +
+                    '</button>' +
+                    '</div>';
+            }).join('');
         }
     } catch (e) {
         console.error('Error loading protection list:', e);
@@ -567,12 +487,12 @@ async function loadProtectionList() {
 
 // Test Query
 window.updateTestFields = function() {
-    const type = document.getElementById('test-type').value;
-    const queryField = document.getElementById('test-query-field');
-    const queryLabel = queryField.querySelector('label');
-    const queryInput = queryField.querySelector('input');
+    var type = document.getElementById('test-type').value;
+    var queryField = document.getElementById('test-query-field');
+    var queryLabel = queryField.querySelector('label');
+    var queryInput = queryField.querySelector('input');
 
-    const labels = {
+    var labels = {
         'cpf': 'CPF',
         'nome': 'Nome',
         'numero': 'Telefone',
@@ -594,30 +514,30 @@ window.updateTestFields = function() {
     };
 
     queryLabel.textContent = labels[type] || 'Query';
-    queryInput.placeholder = `Digite ${labels[type] || 'o valor'}`;
+    queryInput.placeholder = 'Digite ' + (labels[type] || 'o valor');
 };
 
 window.testQuery = async function() {
-    const type = document.getElementById('test-type').value;
-    const query = document.getElementById('test-query').value.trim();
-    const apikey = document.getElementById('test-apikey').value.trim() || 'MutanoXX';
+    var type = document.getElementById('test-type').value;
+    var query = document.getElementById('test-query').value.trim();
+    var apikey = document.getElementById('test-apikey').value.trim() || 'MutanoXX';
 
     if (!query) {
         showToast('error', 'Preencha o campo de consulta');
         return;
     }
 
-    const resultDiv = document.getElementById('test-result');
-    const resultContent = document.getElementById('test-result-content');
+    var resultDiv = document.getElementById('test-result');
+    var resultContent = document.getElementById('test-result-content');
 
     resultDiv.classList.remove('hidden');
     resultContent.textContent = 'Executando consulta...';
 
     try {
-        const response = await fetch(`/api/consultas?tipo=${type}&q=${encodeURIComponent(query)}&apikey=${apikey}`);
+        const response = await fetch('/api/consultas?tipo=' + type + '&q=' + encodeURIComponent(query) + '&apikey=' + apikey);
         const data = await response.json();
 
-        resultContent.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        resultContent.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
 
         if (data.sucesso) {
             showToast('success', 'Consulta executada com sucesso');
@@ -625,7 +545,7 @@ window.testQuery = async function() {
             showToast('error', data.erro || 'Erro na consulta');
         }
     } catch (e) {
-        resultContent.innerHTML = `<pre style="color: #ef4444;">Erro: ${e.message}</pre>`;
+        resultContent.innerHTML = '<pre style="color: #ef4444;">Erro: ' + e.message + '</pre>';
         showToast('error', 'Erro de conexão');
     }
 };
@@ -634,19 +554,16 @@ window.testQuery = async function() {
 function showToast(type, message) {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        <span>${message}</span>
-    `;
+    toast.className = 'toast ' + type;
+    toast.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i><span>' + message + '</span>';
     container.appendChild(toast);
 
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(function() { toast.remove(); }, 3000);
 }
 
 // Chart Range
 window.setChartRange = function(range) {
-    document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.time-btn').forEach(function(btn) { btn.classList.remove('active'); });
     event.target.classList.add('active');
-    showToast('info', `Filtrando por ${range}`);
+    showToast('info', 'Filtrando por ' + range);
 };
