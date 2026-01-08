@@ -47,33 +47,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Login function
+// Login function - Validação segura via API
 window.login = async function() {
     const usernameInput = document.getElementById('admin-username');
     const passwordInput = document.getElementById('admin-password');
     const username = usernameInput ? usernameInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value.trim() : '';
 
-    // Validação local das credenciais
+    // Validar usuário e senha
     if (!username || !password) {
         showToast('error', 'Preencha todos os campos');
         return;
     }
 
-    // Verificar credenciais hardcoded (validação local)
-    if (username === 'admin' && password === 'MutanoX3397') {
-        adminKey = 'MutanoX3397';
-        localStorage.setItem('mutanox_admin_key', adminKey);
-        localStorage.setItem('mutanox_admin_user', username);
-        showToast('success', 'Autenticado com sucesso');
-        showDashboard();
-    } else {
-        const errorEl = document.getElementById('login-error');
-        if (errorEl) errorEl.classList.remove('hidden');
-        setTimeout(() => {
-            if (errorEl) errorEl.classList.add('hidden');
-        }, 3000);
-        showToast('error', 'Credenciais inválidas');
+    try {
+        // Enviar credenciais para a API validar (back-end)
+        const response = await fetch('/api/admin/validate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Login bem-sucedido - salvar chave e mostrar dashboard
+            adminKey = data.adminKey;
+            localStorage.setItem('mutanox_admin_key', adminKey);
+            localStorage.setItem('mutanox_admin_user', username);
+            showToast('success', 'Autenticado com sucesso');
+            showDashboard();
+        } else {
+            // Login falhou - mostrar erro
+            const errorEl = document.getElementById('login-error');
+            if (errorEl) errorEl.classList.remove('hidden');
+            setTimeout(() => {
+                if (errorEl) errorEl.classList.add('hidden');
+            }, 3000);
+            showToast('error', data.message || 'Credenciais inválidas');
+        }
+    } catch (error) {
+        // Erro de conexão com o servidor
+        showToast('error', 'Erro de conexão com o servidor');
     }
 }
 
