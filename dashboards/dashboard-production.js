@@ -60,20 +60,35 @@ window.login = async function() {
         return;
     }
 
-    // Verificar credenciais hardcoded
-    if (username === 'admin' && password === 'MutanoX3397') {
-        adminKey = 'MutanoX3397';
-        localStorage.setItem('mutanox_admin_key', adminKey);
-        localStorage.setItem('mutanox_admin_user', username);
-        showToast('success', 'Autenticado com sucesso');
-        showDashboard();
-    } else {
-        const errorEl = document.getElementById('login-error');
-        if (errorEl) errorEl.classList.remove('hidden');
-        setTimeout(() => {
-            if (errorEl) errorEl.classList.add('hidden');
-        }, 3000);
-        showToast('error', 'Credenciais inválidas');
+    try {
+        // Enviar credenciais para a API validar
+        const response = await fetch('/api/admin/validate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            adminKey = data.adminKey;
+            localStorage.setItem('mutanox_admin_key', adminKey);
+            localStorage.setItem('mutanox_admin_user', username);
+            showToast('success', 'Autenticado com sucesso');
+            showDashboard();
+        } else {
+            const errorEl = document.getElementById('login-error');
+            if (errorEl) errorEl.classList.remove('hidden');
+            setTimeout(() => {
+                if (errorEl) errorEl.classList.add('hidden');
+            }, 3000);
+            showToast('error', data.message || 'Credenciais inválidas');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showToast('error', 'Erro de conexão com o servidor');
     }
 }
 

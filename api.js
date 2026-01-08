@@ -881,6 +881,24 @@ async function bypassCity(urlParam) {
 }
 
 
+// Helper para ler body de requisições POST
+function getPostData(req) {
+    return new Promise((resolve, reject) => {
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                resolve(JSON.parse(body));
+            } catch (e) {
+                reject(e);
+            }
+        });
+        req.on('error', reject);
+    });
+}
+
 // ==========================================
 // NOVOS ENDPOINTS (ADICIONADOS)
 // ==========================================
@@ -981,12 +999,46 @@ const server = http.createServer(async (req, res) => {
   // ADMIN ENDPOINTS (NEW)
   if (path.startsWith('/api/admin/')) {
       if (path === '/api/admin/validate') {
-          if (apiKey === ADMIN_KEY) {
-              res.writeHead(200); res.end(JSON.stringify({ success: true }));
+          if (req.method === 'POST') {
+              try {
+                  const postData = await getPostData(req);
+                  const { username, password } = postData;
+
+                  // Validar credenciais
+                  if (username === 'admin' && password === ADMIN_KEY) {
+                      res.writeHead(200);
+                      res.end(JSON.stringify({
+                          success: true,
+                          adminKey: ADMIN_KEY,
+                          message: 'Autenticado com sucesso'
+                      }));
+                  } else {
+                      res.writeHead(401);
+                      res.end(JSON.stringify({
+                          success: false,
+                          message: 'Credenciais inválidas'
+                      }));
+                  }
+              } catch (error) {
+                  console.error('[Validate Error]', error.message);
+                  res.writeHead(400);
+                  res.end(JSON.stringify({
+                      success: false,
+                      message: 'Erro ao processar requisição'
+                  }));
+              }
+              return;
           } else {
-              res.writeHead(401); res.end(JSON.stringify({ success: false }));
+              // Mantém compatibilidade com GET para validação por API key
+              if (apiKey === ADMIN_KEY) {
+                  res.writeHead(200);
+                  res.end(JSON.stringify({ success: true }));
+              } else {
+                  res.writeHead(401);
+                  res.end(JSON.stringify({ success: false }));
+              }
+              return;
           }
-          return;
       }
 
       if (!auth.isAdmin) {
