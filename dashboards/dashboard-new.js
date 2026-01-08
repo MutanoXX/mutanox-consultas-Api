@@ -237,10 +237,22 @@ function updateDashboard(data) {
     document.getElementById('stat-total').textContent = data.totalRequests.toLocaleString();
     document.getElementById('stat-keys').textContent = Object.keys(data.keys).length;
 
-    var uptimeSeconds = Math.floor(data.uptime / 1000);
+    // Atualizar contador de endpoints
+    var totalEndpoints = Object.keys(endpoints).length;
+    var endpointEl = document.getElementById('stat-endpoints');
+    if (endpointEl) {
+        endpointEl.textContent = totalEndpoints;
+    }
+
+    // Melhor cálculo do uptime com horas, minutos e segundos
+    var uptimeMs = data.uptime;
+    var uptimeSeconds = Math.floor(uptimeMs / 1000);
     var hours = Math.floor(uptimeSeconds / 3600);
     var minutes = Math.floor((uptimeSeconds % 3600) / 60);
-    document.getElementById('stat-uptime').textContent = hours + 'h ' + minutes + 'm';
+    var seconds = Math.floor(uptimeSeconds % 60);
+
+    // Formato: "Xh Ym Zs"
+    document.getElementById('stat-uptime').textContent = hours + 'h ' + minutes + 'm ' + seconds + 's';
 }
 
 function updateCharts(data) {
