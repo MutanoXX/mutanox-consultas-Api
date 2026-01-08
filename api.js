@@ -1081,6 +1081,7 @@ const server = http.createServer(async (req, res) => {
           log('ADMIN', `Chave removida: ${target}`);
           res.writeHead(200); res.end(JSON.stringify({ success: true, message: 'Key deleted' }));
       } else if (path === '/api/admin/endpoints' && req.method === 'GET') {
+          // Retornar TODOS os endpoints, não apenas os com hits
           const endpointKeys = Object.keys(endpointsConfig);
           const endpointsData = endpointKeys.map(key => ({
               id: key,

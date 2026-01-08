@@ -301,37 +301,39 @@ async function loadEndpoints() {
         if (data.success && data.endpoints) {
             endpointsData = data.endpoints;
             var grid = document.getElementById('endpoints-grid');
-            grid.innerHTML = '';
 
-            Object.entries(data.endpoints).forEach(function(entry) {
-                var key = entry[0];
-                var endpoint = entry[1];
-                var endpointInfo = endpoints[key] || { name: key, icon: 'fa-plug', color: '#64748b', desc: 'Endpoint' };
+            // Limpar o grid antes de preencher
+            if (grid) {
+                grid.innerHTML = '';
 
-                var card = document.createElement('div');
-                card.className = 'card endpoint-card';
-                card.innerHTML = '' +
-                    '<div class="endpoint-header">' +
-                        '<div class="endpoint-icon" style="background: linear-gradient(135deg, ' + endpointInfo.color + ' 0%, ' + endpointInfo.color + 'dd 100%);">' +
-                            '<i class="fas ' + endpointInfo.icon + '"></i>' +
-                        '</div>' +
-                        '<div class="endpoint-name">' + endpointInfo.name + '</div>' +
-                    '</div>' +
-                    '<div class="endpoint-stats">' +
-                        '<div>' +
-                            '<div class="endpoint-hits">' + (endpoint.hits || 0) + '</div>' +
-                            '<div class="endpoint-label">Acessos</div>' +
-                        '</div>' +
-                        '<div style="text-align: right;">' +
-                            '<span class="badge ' + (endpoint.active ? 'badge-active' : 'badge-inactive') + '">' +
-                                (endpoint.active ? 'Ativo' : 'Manutencao') +
-                            '</span>' +
-                        '</div>' +
-                    '</div>' +
-                    '';
+                // Criar os cards um por um
+                data.endpoints.forEach(function(endpoint) {
+                    var endpointInfo = endpoints[endpoint.id] || { name: endpoint.id, icon: 'fa-plug', color: '#64748b', desc: 'Endpoint' };
 
-                grid.appendChild(card);
-            });
+                    var card = document.createElement('div');
+                    card.className = 'card endpoint-card';
+                    card.innerHTML = '' +
+                        '<div class="endpoint-header">' +
+                            '<div class="endpoint-icon" style="background: linear-gradient(135deg, ' + endpointInfo.color + ' 0%, ' + endpointInfo.color + 'dd 100%);">' +
+                                '<i class="fas ' + endpointInfo.icon + '"></i>' +
+                            '</div>' +
+                            '<div class="endpoint-name">' + endpointInfo.name + '</div>' +
+                        '</div>' +
+                        '<div class="endpoint-stats">' +
+                            '<div>' +
+                                '<div class="endpoint-hits">' + endpoint.hits + '</div>' +
+                                '<div class="endpoint-label">Acessos</div>' +
+                            '</div>' +
+                            '<div style="text-align: right;">' +
+                                '<span class="badge ' + (endpoint.maintenance ? 'badge-inactive' : 'badge-active') + '">' +
+                                    (endpoint.maintenance ? 'Manutencao' : 'Ativo') +
+                                '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '';
+                    grid.appendChild(card);
+                });
+            }
         }
     } catch (e) {
         console.error('Error loading endpoints:', e);
