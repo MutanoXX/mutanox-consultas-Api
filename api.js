@@ -22,7 +22,7 @@ const API_KEYS_FILE = pathModule.join(__dirname, 'api_keys.json');
 const STATS_FILE = pathModule.join(__dirname, 'api_stats.json');
 const ENDPOINTS_FILE = pathModule.join(__dirname, 'endpoints_config.json');
 const ADMIN_KEY = 'MutanoX3397';
-const DASHBOARD_PATH = pathModule.join(__dirname, 'dashboards', 'dashboard_production.html');
+const DASHBOARD_PATH = pathModule.join(__dirname, 'dashboards', 'dashboard-new.html');
 const PROTECTED_USERS_DIR = pathModule.join(__dirname, 'Users-protegidos');
 
 if (!fs.existsSync(PROTECTED_USERS_DIR)) {
