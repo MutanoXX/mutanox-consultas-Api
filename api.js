@@ -998,6 +998,12 @@ const server = http.createServer(async (req, res) => {
 
   // ADMIN ENDPOINTS (NEW)
   if (path.startsWith('/api/admin/')) {
+,
+      } else if (path === '/docs' && req.method === 'GET') {
+          fs.createReadStream(pathModule.join(__dirname, 'docs/index.html')).pipe(res);
+      } else if (path === '/docs/api-documentation.js' && req.method === 'GET') {
+          fs.createReadStream(pathModule.join(__dirname, 'docs/api-documentation.js')).pipe(res);
+      }
       if (path === '/api/admin/validate') {
           if (req.method === 'POST') {
               try {
@@ -1572,3 +1578,9 @@ server.listen(PORT, () => {
     log('INFO', `Dashboard: http://localhost:${PORT}/admin`);
     // log('ADMIN', `Admin Key: ${ADMIN_KEY}`);
 });
+
+      } else if (path === '/docs' && req.method === 'GET') {
+          fs.createReadStream(pathModule.join(__dirname, 'docs/index.html')).pipe(res);
+      } else if (path === '/docs/api-documentation.js' && req.method === 'GET') {
+          fs.createReadStream(pathModule.join(__dirname, 'docs/api-documentation.js')).pipe(res);
+      }
