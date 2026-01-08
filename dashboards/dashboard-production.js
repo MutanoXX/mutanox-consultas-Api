@@ -49,33 +49,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Login function
 window.login = async function() {
-    const keyInput = document.getElementById('admin-key-input');
-    const key = keyInput.value;
-    
-    if (!key) {
-        showToast('error', 'Insira a chave admin');
+    const usernameInput = document.getElementById('admin-username');
+    const passwordInput = document.getElementById('admin-password');
+    const username = usernameInput ? usernameInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value.trim() : '';
+
+    // Validar usuário e senha
+    if (!username || !password) {
+        showToast('error', 'Preencha todos os campos');
         return;
     }
 
-    try {
-        const response = await fetch(`/api/admin/validate?apikey=${key}`);
-        if (response.ok) {
-            adminKey = key;
-            localStorage.setItem('mutanox_admin_key', key);
-            showToast('success', 'Autenticado com sucesso');
-            showDashboard();
-        } else {
-            const errorEl = document.getElementById('login-error');
-            errorEl.classList.remove('hidden');
-            setTimeout(() => errorEl.classList.add('hidden'), 3000);
-        }
-    } catch (error) {
-        showToast('error', 'Erro de conexão');
+    // Verificar credenciais hardcoded
+    if (username === 'admin' && password === 'MutanoX3397') {
+        adminKey = 'MutanoX3397';
+        localStorage.setItem('mutanox_admin_key', adminKey);
+        localStorage.setItem('mutanox_admin_user', username);
+        showToast('success', 'Autenticado com sucesso');
+        showDashboard();
+    } else {
+        const errorEl = document.getElementById('login-error');
+        if (errorEl) errorEl.classList.remove('hidden');
+        setTimeout(() => {
+            if (errorEl) errorEl.classList.add('hidden');
+        }, 3000);
+        showToast('error', 'Credenciais inválidas');
     }
 }
 
 window.logout = function() {
     localStorage.removeItem('mutanox_admin_key');
+    localStorage.removeItem('mutanox_admin_user');
     location.reload();
 }
 
