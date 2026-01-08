@@ -1,47 +1,21 @@
 {
-  "cpf": {
-    "maintenance": false
-  },
-  "nome": {
-    "maintenance": false
-  },
-  "numero": {
-    "maintenance": false
-  },
-  "bypass": {
-    "maintenance": false
-  },
-  "bypasscf": {
-    "maintenance": false
-  },
-  "infoff": {
-    "maintenance": false
-  },
-  "downloader": {
-    "maintenance": false
-  },
-  "github": {
-    "maintenance": false
-  },
-  "gimage": {
-    "maintenance": false
-  },
-  "pinterest": {
-    "maintenance": false
-  },
-  "roblox": {
-    "maintenance": false
-  },
-  "tiktok": {
-    "maintenance": false
-  },
-  "yt": {
-    "maintenance": false
-  },
-  "video": {
-    "maintenance": false
-  },
-  "nsfw": {
-    "maintenance": false
-  }
+  "cpf": { "name": "Consultar CPF", "description": "Consulta completa de dados pessoais", "maintenance": false },
+  "nome": { "name": "Consultar Nome", "description": "Busca por nome completo", "maintenance": false },
+  "numero": { "name": "Consultar Telefone", "description": "Consulta de dados telefônicos", "maintenance": false },
+  "bypass": { "name": "Bypass City", "description": "Bypass de proteção", "maintenance": false },
+  "bypasscf": { "name": "Bypass Cloudflare", "description": "Bypass de proteção CF", "maintenance": false },
+  "infoff": { "name": "Free Fire Info", "description": "Informações de conta Free Fire", "maintenance": false },
+  "downloader": { "name": "AIO Downloader", "description": "Download de mídias", "maintenance": false },
+  "github": { "name": "GitHub Search", "description": "Busca de usuários", "maintenance": false },
+  "gimage": { "name": "Google Images", "description": "Busca de imagens", "maintenance": false },
+  "pinterest": { "name": "Pinterest Search", "description": "Busca de pins", "maintenance": false },
+  "roblox": { "name": "Roblox Stalk", "description": "Info de usuários", "maintenance": false },
+  "tiktok": { "name": "TikTok Search", "description": "Busca de perfis", "maintenance": false },
+  "yt": { "name": "YouTube Search", "description": "Busca de vídeos", "maintenance": false },
+  "video": { "name": "Text to Video", "description": "Geracao de videos", "maintenance": false },
+  "nsfw": { "name": "NSFW Generator", "description": "Geracao de imagens", "maintenance": false },
+  "clima": { "name": "Clima Tempo", "description": "Previsao do tempo", "maintenance": false },
+  "cotacao": { "name": "Cotacao Moedas", "description": "Cotacao em tempo real", "maintenance": false },
+  "qrcode": { "name": "Gerador QR Code", "description": "Gera QR Code", "maintenance": false },
+  "shorten": { "name": "Encurtador URL", "description": "Encurta links", "maintenance": false }
 }
