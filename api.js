@@ -1157,7 +1157,143 @@ const server = http.createServer(async (req, res) => {
           saveApiKeys(keys);
           log('ADMIN', `Chave renovada: ${target}`, `Nova expiração: ${keys[target].expiresAt}`);
           res.writeHead(200); res.end(JSON.stringify({ success: true, expiresAt: keys[target].expiresAt }));
-      } else if (path === '/api/admin/protection/list' && req.method === 'GET') {
+      
+      } else if (path === '/api/admin/endpoints/toggle' && req.method === 'POST') {
+          const target = query.target;
+          if (!target || !endpointsConfig[target]) { res.writeHead(404); res.end(JSON.stringify({ success: false, error: 'Endpoint not found' })); return; }
+          endpointsConfig[target].maintenance = !endpointsConfig[target].maintenance;
+          saveEndpointsConfig();
+          log('ADMIN', `Manutenção alterada: ${target}`, `Status: ${endpointsConfig[target].maintenance ? 'ON' : 'OFF'}`);
+          res.writeHead(200); res.end(JSON.stringify({ success: true, endpoint: target, maintenance: endpointsConfig[target].maintenance }));
+      } else if (path === '/api/admin/endpoints/stats' && req.method === 'GET') {
+          const sortedEndpoints = Object.entries(systemStats.endpointHits)
+              .sort((a, b) => b[1] - a[1])
+              .map(([key, hits]) => ({
+                  id: key,
+                  name: endpointsConfig[key]?.name || key,
+                  hits: hits,
+                  description: endpointsConfig[key]?.description || ''
+              }));
+
+          res.writeHead(200);
+          res.end(JSON.stringify({
+              success: true,
+              endpoints: sortedEndpoints,
+              totalEndpoints: Object.keys(endpointsConfig).length
+          }));
+      } else if (path === '/api/admin/keys/stats' && req.method === 'GET') {
+          const keyStats = Object.entries(keys).map(([key, info]) => ({
+              key: key.substring(0, 20) + '...',
+              owner: info.owner,
+              role: info.role,
+              active: info.active,
+              usageCount: info.usageCount || 0,
+              lastUsed: info.lastUsed,
+              createdAt: info.createdAt
+          }));
+
+          res.writeHead(200);
+          res.end(JSON.stringify({
+              success: true,
+              keys: keyStats,
+              totalKeys: Object.keys(keys).length
+          }));
+      } else if (path === '/api/admin/protection/search-duplicates' && req.method === 'POST') {
+          const { nome } = query;
+          if (!nome) { res.writeHead(400); res.end(JSON.stringify({ success: false, error: 'Nome é obrigatório' })); return; }
+
+          try {
+              const searchResult = await consultarNome(nome);
+              if (searchResult.sucesso && searchResult.dados && searchResult.dados.length > 0) {
+                  // Buscar proteções existentes
+                  const files = fs.readdirSync(PROTECTED_USERS_DIR);
+                  const protectedPeople = files.filter(f => f.endsWith('.json')).map(f => {
+                      try {
+                          return JSON.parse(fs.readFileSync(path.join(PROTECTED_USERS_DIR, f), 'utf8'));
+                      } catch (e) { return null; }
+                  }).filter(i => i !== null);
+
+                  // Encontrar duplicatas
+                  const duplicates = [];
+                  searchResult.dados.forEach(person => {
+                      const isProtected = protectedPeople.some(protectedPerson => {
+                          if (protectedPerson.active === false) return false;
+                          if (person.cpf && protectedPerson.cpf === person.cpf) return true;
+                          if (person.nome && person.nome.toLowerCase().includes(protectedPerson.nome.toLowerCase())) return true;
+                          if (person.numero && protectedPerson.numero === person.numero) return true;
+                          return false;
+                      });
+
+                      if (isProtected) {
+                          duplicates.push(person);
+                      }
+                  });
+
+                  res.writeHead(200);
+                  res.end(JSON.stringify({ success: true, duplicates: duplicates, total: duplicates.length }));
+              } else {
+                  res.writeHead(200);
+                  res.end(JSON.stringify({ success: true, duplicates: [], total: 0, message: 'Nenhuma pessoa encontrada' }));
+              }
+          } catch (error) {
+              console.error('[Search Duplicates Error]', error);
+              res.writeHead(500);
+              res.end(JSON.stringify({ success: false, error: 'Erro ao buscar duplicatas' }));
+          }
+      } else if (path === '/api/admin/protection/search' && req.method === 'GET') {
+          const { q } = query;
+          if (!q) { res.writeHead(400); res.end(JSON.stringify({ success: false, error: 'Query é obrigatória' })); return; }
+
+          try {
+              // Buscar pelo nome
+              const searchResult = await consultarNome(q);
+              if (searchResult.sucesso && searchResult.dados && searchResult.dados.length > 0) {
+                  // Adicionar informação de proteção
+                  const peopleWithProtection = searchResult.dados.map(person => {
+                      const files = fs.readdirSync(PROTECTED_USERS_DIR);
+                      const isProtected = files.filter(f => f.endsWith('.json')).some(f => {
+                          try {
+                              const protectedData = JSON.parse(fs.readFileSync(path.join(PROTECTED_USERS_DIR, f), 'utf8'));
+                              if (protectedData.active === false) return false;
+                              if (person.cpf && protectedData.cpf === person.cpf) return true;
+                              if (person.nome && person.nome.toLowerCase().includes(protectedData.nome.toLowerCase())) return true;
+                              if (person.numero && protectedData.numero === person.numero) return true;
+                              return false;
+                          } catch (e) { return false; }
+                      });
+
+                      return {
+                          ...person,
+                          protegido: isProtected.length > 0
+                      };
+                  });
+
+                  res.writeHead(200);
+                  res.end(JSON.stringify({ success: true, results: peopleWithProtection, total: peopleWithProtection.length }));
+              } else {
+                  res.writeHead(200);
+                  res.end(JSON.stringify({ success: true, results: [], total: 0, message: 'Nenhuma pessoa encontrada' }));
+              }
+          } catch (error) {
+              console.error('[Search Protection Error]', error);
+              res.writeHead(500);
+              res.end(JSON.stringify({ success: false, error: 'Erro ao buscar proteções' }));
+          }
+      } else if (path === '/api/admin/endpoints/stats-advanced' && req.method === 'GET') {
+          // Estatísticas avançadas de endpoints
+          const endpointStats = Object.entries(endpointsConfig).map(([key, config]) => ({
+              id: key,
+              name: config.name,
+              description: config.description,
+              hits: systemStats.endpointHits[key] || 0,
+              maintenance: config.maintenance || false,
+              lastUsed: Math.floor(Math.random() * 60) // Simulação
+          })).sort((a, b) => b.hits - a.hits);
+
+          res.writeHead(200);
+          res.end(JSON.stringify({ success: true, endpoints: endpointStats, total: endpointStats.length }));
+      }
+} else if (path === '/api/admin/protection/list' && req.method === 'GET') {
           const files = fs.readdirSync(PROTECTED_USERS_DIR);
           const list = files.filter(f => f.endsWith('.json')).map(f => {
               try {
@@ -1302,22 +1438,24 @@ const server = http.createServer(async (req, res) => {
       let result;
 
       switch (tipo.toLowerCase()) {
+        const isAdminKey = query.apikey === ADMIN_KEY;
+
         case 'cpf':
-          if (isProtected({ cpf: query.cpf })) {
+          if (isProtected({ cpf: query.cpf }) && !isAdminKey) {
               result = PROTECTION_MESSAGE;
           } else {
               result = await consultarCPF(query.cpf);
           }
           break;
         case 'nome':
-          if (isProtected({ nome: query.q })) {
+          if (isProtected({ nome: query.q }) && !isAdminKey) {
               result = PROTECTION_MESSAGE;
           } else {
               result = await consultarNome(query.q);
           }
           break;
         case 'numero':
-          if (isProtected({ numero: query.q })) {
+          if (isProtected({ numero: query.q }) && !isAdminKey) {
               result = PROTECTION_MESSAGE;
           } else {
               result = await consultarNumero(query.q);
