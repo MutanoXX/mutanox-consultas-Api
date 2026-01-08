@@ -2,17 +2,6 @@
 const API_BASE = '';
 let adminKey = localStorage.getItem('mutanox_admin_key') || '';
 
-// Proteção contra manipulação
-(function() {
-    // Congelar objetos sensíveis para evitar manipulação via console
-    if (typeof endpointConfigs !== 'undefined') Object.freeze(endpointConfigs);
-
-    // Bloquear redefinição de funções críticas
-    const criticalFunctions = ['login', 'logout', 'addProtection', 'executeProtection'];
-    criticalFunctions.forEach(fn => {
-        if (window[fn]) Object.defineProperty(window, fn, { writable: false, configurable: false });
-    });
-})();
 let refreshInterval = null;
 let refreshRate = 2000;
 let lastData = null;
@@ -34,6 +23,18 @@ const endpointConfigs = {
     'shorten': { name: 'Encurtador URL', icon: 'fa-link', color: '#f472b6', description: 'Encurta links' },
     'nsfw': { name: 'NSFW Gen', icon: 'fa-image', color: '#f97316', description: 'Geração de imagens NSFW' }
 };
+
+// Proteção contra manipulação (agora após endpointConfigs ser definido)
+(function() {
+    // Congelar objetos sensíveis para evitar manipulação via console
+    if (typeof endpointConfigs !== 'undefined') Object.freeze(endpointConfigs);
+
+    // Bloquear redefinição de funções críticas
+    const criticalFunctions = ['login', 'logout', 'addProtection', 'executeProtection'];
+    criticalFunctions.forEach(fn => {
+        if (window[fn]) Object.defineProperty(window, fn, { writable: false, configurable: false });
+    });
+})();
 
 // Helper function to safely get element
 function safeGetElement(id) {
