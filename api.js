@@ -991,6 +991,16 @@ const server = http.createServer(async (req, res) => {
       }
   }
 
+  // SERVIR DOCUMENTAÇÃO (PÚBLICA)
+  if (path === '/docs' && req.method === 'GET') {
+      fs.createReadStream(pathModule.join(__dirname, 'docs/index.html')).pipe(res);
+      return;
+  } else if (path === '/docs/api-documentation.js' && req.method === 'GET') {
+      res.setHeader('Content-Type', 'application/javascript');
+      fs.createReadStream(pathModule.join(__dirname, 'docs/api-documentation.js')).pipe(res);
+      return;
+  }
+
   // AUTHENTICATION (NEW)
   const auth = validateAndTrackKey(apiKey, path.startsWith('/api/admin/') ? true : false);
   const logMsg = `Usuário: ${auth.valid ? auth.owner : 'DESCONHECIDO'} | Rota: ${path}`;
@@ -998,12 +1008,6 @@ const server = http.createServer(async (req, res) => {
 
   // ADMIN ENDPOINTS (NEW)
   if (path.startsWith('/api/admin/')) {
-,
-      } else if (path === '/docs' && req.method === 'GET') {
-          fs.createReadStream(pathModule.join(__dirname, 'docs/index.html')).pipe(res);
-      } else if (path === '/docs/api-documentation.js' && req.method === 'GET') {
-          fs.createReadStream(pathModule.join(__dirname, 'docs/api-documentation.js')).pipe(res);
-      }
       if (path === '/api/admin/validate') {
           if (req.method === 'POST') {
               try {
@@ -1159,51 +1163,10 @@ const server = http.createServer(async (req, res) => {
           now.setDate(now.getDate() + days);
           keys[target].expiresAt = now.toISOString();
           keys[target].active = true;
-          
+
           saveApiKeys(keys);
           log('ADMIN', `Chave renovada: ${target}`, `Nova expiração: ${keys[target].expiresAt}`);
           res.writeHead(200); res.end(JSON.stringify({ success: true, expiresAt: keys[target].expiresAt }));
-      
-      } else if (path === '/api/admin/endpoints/toggle' && req.method === 'POST') {
-          const target = query.target;
-          if (!target || !endpointsConfig[target]) { res.writeHead(404); res.end(JSON.stringify({ success: false, error: 'Endpoint not found' })); return; }
-          endpointsConfig[target].maintenance = !endpointsConfig[target].maintenance;
-          saveEndpointsConfig();
-          log('ADMIN', `Manutenção alterada: ${target}`, `Status: ${endpointsConfig[target].maintenance ? 'ON' : 'OFF'}`);
-          res.writeHead(200); res.end(JSON.stringify({ success: true, endpoint: target, maintenance: endpointsConfig[target].maintenance }));
-      } else if (path === '/api/admin/endpoints/stats' && req.method === 'GET') {
-          const sortedEndpoints = Object.entries(systemStats.endpointHits)
-              .sort((a, b) => b[1] - a[1])
-              .map(([key, hits]) => ({
-                  id: key,
-                  name: endpointsConfig[key]?.name || key,
-                  hits: hits,
-                  description: endpointsConfig[key]?.description || ''
-              }));
-
-          res.writeHead(200);
-          res.end(JSON.stringify({
-              success: true,
-              endpoints: sortedEndpoints,
-              totalEndpoints: Object.keys(endpointsConfig).length
-          }));
-      } else if (path === '/api/admin/keys/stats' && req.method === 'GET') {
-          const keyStats = Object.entries(keys).map(([key, info]) => ({
-              key: key.substring(0, 20) + '...',
-              owner: info.owner,
-              role: info.role,
-              active: info.active,
-              usageCount: info.usageCount || 0,
-              lastUsed: info.lastUsed,
-              createdAt: info.createdAt
-          }));
-
-          res.writeHead(200);
-          res.end(JSON.stringify({
-              success: true,
-              keys: keyStats,
-              totalKeys: Object.keys(keys).length
-          }));
       } else if (path === '/api/admin/protection/search-duplicates' && req.method === 'POST') {
           const { nome } = query;
           if (!nome) { res.writeHead(400); res.end(JSON.stringify({ success: false, error: 'Nome é obrigatório' })); return; }
@@ -1298,8 +1261,7 @@ const server = http.createServer(async (req, res) => {
 
           res.writeHead(200);
           res.end(JSON.stringify({ success: true, endpoints: endpointStats, total: endpointStats.length }));
-      }
-} else if (path === '/api/admin/protection/list' && req.method === 'GET') {
+      } else if (path === '/api/admin/protection/list' && req.method === 'GET') {
           const files = fs.readdirSync(PROTECTED_USERS_DIR);
           const list = files.filter(f => f.endsWith('.json')).map(f => {
               try {
@@ -1397,10 +1359,6 @@ const server = http.createServer(async (req, res) => {
           } else {
               res.writeHead(404); res.end(JSON.stringify({ success: false, error: 'Proteção não encontrada' }));
           }
-      } else if (path === '/api/admin/protection/list' && req.method === 'GET') {
-          const files = fs.readdirSync(PROTECTED_USERS_DIR);
-          const list = files.filter(f => f.endsWith('.json')).map(f => JSON.parse(fs.readFileSync(pathModule.join(PROTECTED_USERS_DIR, f), 'utf8')));
-          res.writeHead(200); res.end(JSON.stringify({ success: true, list }));
       }
       return;
   }
@@ -1432,6 +1390,8 @@ const server = http.createServer(async (req, res) => {
 
       // Verificar Manutenção
       const endpointKey = tipo.toLowerCase();
+      const isAdminKey = query.apikey === ADMIN_KEY;
+
       if (endpointsConfig[endpointKey] && endpointsConfig[endpointKey].maintenance) {
           log('WARN', `Tentativa de acesso a endpoint em manutenção: ${endpointKey}`);
           res.writeHead(503);
@@ -1444,8 +1404,6 @@ const server = http.createServer(async (req, res) => {
       let result;
 
       switch (tipo.toLowerCase()) {
-        const isAdminKey = query.apikey === ADMIN_KEY;
-
         case 'cpf':
           if (isProtected({ cpf: query.cpf }) && !isAdminKey) {
               result = PROTECTION_MESSAGE;
@@ -1578,9 +1536,3 @@ server.listen(PORT, () => {
     log('INFO', `Dashboard: http://localhost:${PORT}/admin`);
     // log('ADMIN', `Admin Key: ${ADMIN_KEY}`);
 });
-
-      } else if (path === '/docs' && req.method === 'GET') {
-          fs.createReadStream(pathModule.join(__dirname, 'docs/index.html')).pipe(res);
-      } else if (path === '/docs/api-documentation.js' && req.method === 'GET') {
-          fs.createReadStream(pathModule.join(__dirname, 'docs/api-documentation.js')).pipe(res);
-      }
