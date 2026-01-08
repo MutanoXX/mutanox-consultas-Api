@@ -1,0 +1,40 @@
+{
+  "MutanoX3397": {
+    "owner": "Admin",
+    "role": "admin",
+    "active": true,
+    "createdAt": "2026-01-07T00:00:00.000Z",
+    "usageCount": 42,
+    "lastUsed": "2026-01-08T01:51:45.207Z"
+  },
+  "test-key": {
+    "owner": "Teste",
+    "role": "user",
+    "active": true,
+    "usageCount": 12,
+    "lastUsed": "2026-01-07T21:16:51.875Z",
+    "createdAt": "2026-01-07T18:30:00.000Z"
+  },
+  "UserKey123": {
+    "owner": "Joao",
+    "role": "user",
+    "active": true,
+    "createdAt": "2026-01-07T13:01:38.028Z"
+  },
+  "MutanoX-af1b54984b1fafed": {
+    "owner": "Carlos",
+    "role": "user",
+    "active": true,
+    "usageCount": 1,
+    "lastUsed": "2026-01-07T13:09:10.436Z",
+    "createdAt": "2026-01-07T13:09:10.418Z"
+  },
+  "MutanoX-bf4c326050e5a68b": {
+    "owner": "MutanoUser",
+    "role": "user",
+    "active": true,
+    "usageCount": 0,
+    "lastUsed": null,
+    "createdAt": "2026-01-07T13:15:24.786Z"
+  }
+}

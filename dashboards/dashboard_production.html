@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MutanoX | Production Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --secondary: #6366f1;
+            --bg-dark: #0a0f1a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(51, 65, 85, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        .cyber-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-pulse {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .terminal {
+            background: #0f172a;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 16px;
+            border: 1px solid #334155;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 4px;
+        }
+
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-warning { color: #f59e0b; }
+        .log-info { color: #3b82f6; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .hidden { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: rgba(15, 23, 42, 0.5);
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            border-color: #10b981;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-active { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .badge-user { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+
+        .fixed-inset { position: fixed; inset: 0; }
+        .z-1000 { z-index: 1000; }
+        
+        /* Utility Classes */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .gap-4 { gap: 16px; }
+        .grid { display: grid; gap: 1rem; }
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        @media (min-width: 1024px) {
+            .grid-cols-lg-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        .w-full { width: 100%; }
+        .mb-6 { margin-bottom: 24px; }
+        .p-5 { padding: 20px; }
+        .text-lg { font-size: 18px; font-weight: 700; }
+        .text-muted { color: #64748b; }
+        .text-center { text-align: center; }
+    </style>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="fixed-inset z-1000 flex items-center justify-center" style="background: rgba(10, 15, 26, 0.98);">
+        <div class="cyber-card" style="max-width: 400px; width: 90%; padding: 40px; border: 2px solid rgba(16, 185, 129, 0.3);">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <i class="fas fa-shield-halved" style="font-size: 48px; color: #10b981; margin-bottom: 16px;"></i>
+                <h1 class="neon-text" style="font-size: 32px; font-weight: 900; color: #10b981;">MUTANOX</h1>
+                <p style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 2px;">Admin Dashboard</p>
+            </div>
+            <div style="margin-bottom: 24px;">
+                <input type="password" id="admin-key-input" class="input-field" style="text-align: center; font-family: 'JetBrains Mono', monospace;" placeholder="Admin API Key">
+            </div>
+            <button onclick="login()" class="btn-primary w-full">
+                <i class="fas fa-lock-open" style="margin-right: 8px;"></i> Authenticate
+            </button>
+            <p id="login-error" class="hidden" style="text-align: center; color: #ef4444; font-size: 12px; margin-top: 16px;">
+                Chave Inválida!
+            </p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
+    <!-- Selection Modal -->
+    <div id="selection-modal" class="fixed-inset z-1000 hidden" style="background: rgba(10, 15, 26, 0.9);">
+        <div class="cyber-card" style="max-width: 800px; margin: 50px auto; padding: 0; overflow: hidden;">
+            <div class="p-5" style="border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="text-lg">Selecione a Pessoa</h3>
+                <button onclick="closeSelectionModal()" style="background:none; border:none; color:#fff; cursor:pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="selection-results" class="p-5" style="max-height: 60vh; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="dashboard-content" class="container hidden">
+        <header class="cyber-card mb-6" style="padding: 16px 24px; display: flex; justify-content: space-between; items-center: center;">
+            <h1 style="font-size: 20px;">MUTANOX <span style="color: #10b981;">PRODUCTION</span></h1>
+            <div class="flex gap-4">
+                <button onclick="forceRefresh()" class="tab-btn"><i class="fas fa-sync-alt"></i></button>
+                <button onclick="logout()" class="tab-btn" style="color: #ef4444;"><i class="fas fa-power-off"></i></button>
+            </div>
+        </header>
+
+        <nav class="flex gap-4 mb-6">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active">Dashboard</button>
+            <button onclick="switchTab('keys')" id="tab-keys" class="tab-btn">API Keys</button>
+            <button onclick="switchTab('endpoints')" id="tab-endpoints" class="tab-btn">Endpoints</button>
+            <button onclick="switchTab('protection')" id="tab-protection" class="tab-btn">Proteção</button>
+            <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn">Logs</button>
+        </nav>
+
+        <!-- Tab Contents -->
+        <div id="content-dashboard">
+            <div class="grid grid-cols-1 grid-cols-lg-3 gap-6 mb-6">
+                <div class="cyber-card p-5">
+                    <p class="text-muted text-xs uppercase">Total Requests</p>
+                    <h2 id="stat-total" class="text-4xl">0</h2>
+                </div>
+                <div class="cyber-card p-5">
+                    <p class="text-muted text-xs uppercase">Active Keys</p>
+                    <h2 id="stat-keys" class="text-4xl">0</h2>
+                </div>
+                <div class="cyber-card p-5">
+                    <p class="text-muted text-xs uppercase">Uptime</p>
+                    <h2 id="stat-uptime" class="text-4xl">0s</h2>
+                </div>
+            </div>
+            <div class="cyber-card p-5">
+                <h3 class="text-lg mb-4">Request Timeline</h3>
+                <div style="height: 300px;"><canvas id="timelineChart"></canvas></div>
+            </div>
+        </div>
+
+        <div id="content-keys" class="hidden">
+            <div class="cyber-card p-5">
+                <div class="flex justify-between mb-4">
+                    <h3 class="text-lg">API Keys</h3>
+                    <button onclick="openCreateModal()" class="btn-primary">Nova Chave</button>
+                </div>
+                <div id="keys-list" class="grid grid-cols-1 gap-4"></div>
+            </div>
+        </div>
+
+        <div id="content-endpoints" class="hidden">
+            <div id="endpoints-management" class="grid grid-cols-1 grid-cols-lg-3 gap-6"></div>
+        </div>
+
+        <div id="content-protection" class="hidden">
+            <div class="grid grid-cols-1 grid-cols-lg-3 gap-6">
+                <div class="cyber-card p-5">
+                    <h3 class="text-lg mb-4">Adicionar Proteção</h3>
+                    <div class="flex flex-col gap-4">
+                        <input type="text" id="prot-nome" class="input-field" placeholder="Nome">
+                        <input type="text" id="prot-cpf" class="input-field" placeholder="CPF">
+                        <input type="text" id="prot-numero" class="input-field" placeholder="Número">
+                        <input type="number" id="prot-duration" class="input-field" placeholder="Duração (s)">
+                        <button onclick="addProtection()" id="btn-add-prot" class="btn-primary w-full">Proteger</button>
+                    </div>
+                </div>
+                <div class="cyber-card col-span-lg-2 p-5">
+                    <h3 class="text-lg mb-4">Protegidos</h3>
+                    <div id="protection-list" class="flex flex-col gap-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-logs" class="hidden">
+            <div class="cyber-card p-5">
+                <h3 class="text-lg mb-4">System Logs</h3>
+                <div id="terminal" class="terminal" style="height: 500px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Key Modal -->
+    <div id="create-modal" class="fixed-inset z-1000 hidden flex items-center justify-center" style="background: rgba(10, 15, 26, 0.9);">
+        <div class="cyber-card p-6" style="width: 400px;">
+            <h3 class="text-lg mb-4">Nova API Key</h3>
+            <input type="text" id="new-owner" class="input-field mb-4" placeholder="Dono">
+            <select id="new-role" class="input-field mb-4">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+            </select>
+            <div class="flex gap-4">
+                <button onclick="createKey()" class="btn-primary w-full">Criar</button>
+                <button onclick="closeCreateModal()" class="tab-btn w-full">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/dashboards/dashboard-production.js"></script>
+    <script>
+        // ANTI-F12 & CONSOLE PROTECTION
+        (function() {
+            // Bloquear clique direito
+            document.addEventListener('contextmenu', e => e.preventDefault());
+
+            // Bloquear atalhos de inspeção
+            document.addEventListener('keydown', e => {
+                if (
+                    e.keyCode === 123 || // F12
+                    (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I/J/C
+                    (e.ctrlKey && e.keyCode === 85) // Ctrl+U
+                ) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Detecção de DevTools via debugger
+            setInterval(() => {
+                const start = Date.now();
+                debugger;
+                if (Date.now() - start > 100) {
+                    document.body.innerHTML = '<div style="background:#000;color:#f00;height:100vh;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:20px;text-align:center;padding:20px;">ACESSO NEGADO<br>O uso de ferramentas de desenvolvedor é proibido neste sistema.</div>';
+                    setTimeout(() => location.reload(), 2000);
+                }
+            }, 1000);
+
+            // Limpar console continuamente
+            setInterval(() => {
+                console.clear();
+                console.log('%cMUTANOX SECURITY ACTIVE', 'color: #10b981; font-size: 30px; font-weight: bold; text-shadow: 0 0 10px rgba(16,185,129,0.5);');
+                console.log('%cO console foi desativado para sua segurança.', 'color: #94a3b8; font-size: 16px;');
+            }, 500);
+        })();
+    </script>
+</body>
+</html>
